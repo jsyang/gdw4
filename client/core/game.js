@@ -2,7 +2,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/stageTitle'], function(stageTitle) {
+define(['core/drawingArea'], function(DrawingArea) {
   var DrawThisGame;
   return DrawThisGame = (function(_super) {
 
@@ -10,31 +10,53 @@ define(['core/stageTitle'], function(stageTitle) {
 
     DrawThisGame.prototype.entities = [];
 
+    DrawThisGame.prototype.drawingArea = null;
+
+    DrawThisGame.prototype.user = {
+      lastMouse: {
+        x: 0,
+        y: 0
+      }
+    };
+
+    findUIThing;
+
+
     DrawThisGame.prototype.mode = {
-      current: 'draw',
-      draw: function(dt) {
+      current: 'waitfordrawing',
+      waitfordrawing: function(dt) {
+        if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
+          if (this.findUIThing(this.drawingArea)) {
+            this.mode.current = 'drawing';
+          }
+        }
+        return this.user.lastMouse = {
+          x: atom.input.mouse.x,
+          y: atom.input.mouse.y
+        };
+      },
+      drawing: function(dt) {
+        if (atom.input.up('touchfinger') || atom.input.up('mouseleft')) {
+          this.mode.current = 'drawing';
+        }
+        return this.user.lastMouse = {
+          x: atom.input.mouse.x,
+          y: atom.input.mouse.y
+        };
+      },
+      predrawing: function(dt) {
         return this.updateEntities();
       }
     };
 
     DrawThisGame.prototype.draw = function() {
-      var e, _i, _len, _ref;
       atom.context.clear();
-      _ref = this.entities;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        e = _ref[_i];
-        if (e.draw != null) {
-          e.draw();
-        }
-      }
+      this.drawingArea.draw();
     };
-
-    DrawThisGame.prototype.updateEntities = function() {};
 
     function DrawThisGame() {
       this.registerInputs();
-      this;
-
+      this.drawingArea = new DrawingArea();
     }
 
     DrawThisGame.prototype.registerInputs = function() {
