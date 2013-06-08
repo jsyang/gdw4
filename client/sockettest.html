@@ -1,0 +1,22 @@
+<html>
+<head>
+
+
+<script src="socket.io//socket.io.js"></script>
+<script>
+  var socket = io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080');
+  socket.on('news', function (data) {
+    console.log(data);
+    socket.emit('playerJoin', { name: 'Andrew' });
+  });
+
+ 
+</script>
+
+
+</head>
+
+<body>
+Hi There!	
+</body>
+</html>
