@@ -1,0 +1,13 @@
+bird
+carp
+cat
+chicken
+dog
+goldfish
+hamster
+horse
+monkey
+pigeon
+rabbit
+snake
+iguana

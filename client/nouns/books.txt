@@ -1,0 +1,18 @@
+almanac
+best seller
+book
+booklet
+brochure
+comic book
+dictionary
+encyclopedia
+hardcover
+magazine
+novel
+paperback
+periodical
+pamphlet
+picture book
+reference book
+textbook
+bible
