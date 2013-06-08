@@ -7,29 +7,57 @@ define [
     drawingArea : null
     
     user :
+      timeElapsed : 0
       lastMouse : 
         x : 0
         y : 0
     
-    findUIThing
+    isInsideUIThing : (thing) ->
+      atom.input.mouse.x >= thing.x and
+      atom.input.mouse.x < thing.x + thing.w and
+      atom.input.mouse.y >= thing.y and
+      atom.input.mouse.y < thing.y + thing.h
     
+    findUIThing : (thing) ->
+      
     mode :
       current : 'waitfordrawing'
       
       waitfordrawing : (dt) ->
         if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
-          if @findUIThing(@drawingArea)
+          if @isInsideUIThing(@drawingArea)
             @mode.current = 'drawing'
         @user.lastMouse =
           x : atom.input.mouse.x
           y : atom.input.mouse.y
       
       drawing : (dt) ->
-        if (atom.input.up('touchfinger') or atom.input.up('mouseleft'))
-            @mode.current = 'drawing'
-        @user.lastMouse =
-          x : atom.input.mouse.x
-          y : atom.input.mouse.y
+        if (atom.input.released('touchfinger') or atom.input.released('mouseleft'))
+          @mode.current = 'waitfordrawing'
+        else
+          [x, y] = [atom.input.mouse.x, atom.input.mouse.y]
+          
+          # Clamp the drawn lines within the drawing area
+          if x > @drawingArea.x+@drawingArea.w
+            x = @drawingArea.x+@drawingArea.w
+          else if x < @drawingArea.x
+            x = @drawingArea.x
+          
+          if y > @drawingArea.y+@drawingArea.h
+            y = @drawingArea.y+@drawingArea.h
+          else if y < @drawingArea.y
+            y = @drawingArea.y
+            
+          @drawingArea.drawing.push({
+            x1 : @user.lastMouse.x
+            y1 : @user.lastMouse.y
+            x2 : x
+            y2 : y
+          })
+          @user.lastMouse = {
+            x
+            y
+          }
         
       predrawing : (dt) ->
         @updateEntities()

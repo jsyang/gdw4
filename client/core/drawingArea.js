@@ -22,14 +22,27 @@ define(function() {
     }
 
     DrawingArea.prototype.draw = function() {
-      var ac;
+      var ac, line, _i, _len, _ref, _results;
       ac = atom.context;
       ac.fillStyle = '#ddd';
       ac.fillRect(this.x, this.y, this.w, this.h);
       ac.font = '12px sans-serif';
       ac.fillStyle = '#000';
       ac.textBaseline = 'top';
-      return ac.fillText('Draw here!', this.x, this.y);
+      ac.fillText('Draw here!', this.x, this.y);
+      ac.lineCap = 'round';
+      ac.lineWidth = 4.0;
+      _ref = this.drawing;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        line = _ref[_i];
+        _results.push((ac.beginPath(), ac.moveTo(line.x1, line.y1), ac.lineTo(line.x2, line.y2), ac.stroke()));
+      }
+      return _results;
+    };
+
+    DrawingArea.prototype.clear = function() {
+      return this.drawing = [];
     };
 
     return DrawingArea;

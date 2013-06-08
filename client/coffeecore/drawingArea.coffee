@@ -17,3 +17,17 @@ define ->
       ac.fillStyle = '#000'
       ac.textBaseline = 'top'
       ac.fillText('Draw here!',@x,@y)
+      ac.lineCap = 'round'
+      ac.lineWidth = 4.0
+      (
+        ac.beginPath()
+        ac.moveTo(line.x1, line.y1)
+        ac.lineTo(line.x2, line.y2)
+        ac.stroke()
+      ) for line in @drawing
+      
+      
+      
+    clear : ->
+      @drawing = []
+      

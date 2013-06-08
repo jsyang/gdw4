@@ -13,20 +13,24 @@ define(['core/drawingArea'], function(DrawingArea) {
     DrawThisGame.prototype.drawingArea = null;
 
     DrawThisGame.prototype.user = {
+      timeElapsed: 0,
       lastMouse: {
         x: 0,
         y: 0
       }
     };
 
-    findUIThing;
+    DrawThisGame.prototype.isInsideUIThing = function(thing) {
+      return atom.input.mouse.x >= thing.x && atom.input.mouse.x < thing.x + thing.w && atom.input.mouse.y >= thing.y && atom.input.mouse.y < thing.y + thing.h;
+    };
 
+    DrawThisGame.prototype.findUIThing = function(thing) {};
 
     DrawThisGame.prototype.mode = {
       current: 'waitfordrawing',
       waitfordrawing: function(dt) {
         if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
-          if (this.findUIThing(this.drawingArea)) {
+          if (this.isInsideUIThing(this.drawingArea)) {
             this.mode.current = 'drawing';
           }
         }
@@ -36,13 +40,32 @@ define(['core/drawingArea'], function(DrawingArea) {
         };
       },
       drawing: function(dt) {
-        if (atom.input.up('touchfinger') || atom.input.up('mouseleft')) {
-          this.mode.current = 'drawing';
+        var x, y, _ref;
+        if (atom.input.released('touchfinger') || atom.input.released('mouseleft')) {
+          return this.mode.current = 'waitfordrawing';
+        } else {
+          _ref = [atom.input.mouse.x, atom.input.mouse.y], x = _ref[0], y = _ref[1];
+          if (x > this.drawingArea.x + this.drawingArea.w) {
+            x = this.drawingArea.x + this.drawingArea.w;
+          } else if (x < this.drawingArea.x) {
+            x = this.drawingArea.x;
+          }
+          if (y > this.drawingArea.y + this.drawingArea.h) {
+            y = this.drawingArea.y + this.drawingArea.h;
+          } else if (y < this.drawingArea.y) {
+            y = this.drawingArea.y;
+          }
+          this.drawingArea.drawing.push({
+            x1: this.user.lastMouse.x,
+            y1: this.user.lastMouse.y,
+            x2: x,
+            y2: y
+          });
+          return this.user.lastMouse = {
+            x: x,
+            y: y
+          };
         }
-        return this.user.lastMouse = {
-          x: atom.input.mouse.x,
-          y: atom.input.mouse.y
-        };
       },
       predrawing: function(dt) {
         return this.updateEntities();
