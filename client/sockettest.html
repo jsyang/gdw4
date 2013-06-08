@@ -2,12 +2,36 @@
 <head>
 
 
-<script src="socket.io//socket.io.js"></script>
+<script src="lib/socket.io.js"></script>
 <script>
   var socket = io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080');
-  socket.on('news', function (data) {
-    console.log(data);
+  
+  socket.on("welcome", function (data) {
     socket.emit('playerJoin', { name: 'Andrew' });
+    socket.emit('addLine', { x1: 1, y1: 1, x2: 1, y2: 1});
+    socket.emit('sendMessage', { message: "Chat message"});
+    
+    socket.emit('guessWords', { word1: "pink", word2: "elephant" });
+
+  });
+  
+  socket.on('players', function (data) {
+    console.log(data);  
+    console.log(data.players[0]); 
+  });
+  
+  socket.on('canvas', function (data) {
+    console.log(data);
+    for (var i = 0; i < data.lines.length; i++) {
+      console.log(data.lines[i]);
+    }
+  });
+  
+  socket.on('chat', function (data) {
+    console.log(data);
+    for (var i = 0; i < data.messages.length; i++) {
+      console.log(data.messages[i]);
+    }
   });
 
  
