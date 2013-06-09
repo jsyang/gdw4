@@ -2,7 +2,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/drawingArea'], function(DrawingArea) {
+define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
   var DrawThisGame;
   return DrawThisGame = (function(_super) {
 
@@ -11,6 +11,8 @@ define(['core/drawingArea'], function(DrawingArea) {
     DrawThisGame.prototype.entities = [];
 
     DrawThisGame.prototype.drawingArea = null;
+
+    DrawThisGame.prototype.players = {};
 
     DrawThisGame.prototype.user = {
       timeElapsed: 0,
@@ -40,7 +42,7 @@ define(['core/drawingArea'], function(DrawingArea) {
         };
       },
       drawing: function(dt) {
-        var x, y, _ref;
+        var lastLine, x, y, _ref;
         if (atom.input.released('touchfinger') || atom.input.released('mouseleft')) {
           return this.mode.current = 'waitfordrawing';
         } else {
@@ -55,12 +57,15 @@ define(['core/drawingArea'], function(DrawingArea) {
           } else if (y < this.drawingArea.y) {
             y = this.drawingArea.y;
           }
-          this.drawingArea.drawing.push({
-            x1: this.user.lastMouse.x,
-            y1: this.user.lastMouse.y,
-            x2: x,
-            y2: y
-          });
+          lastLine = this.drawingArea[this.drawingArea.length - 1];
+          if (!(lastLine != null) || ((lastLine != null) && lastLine.x1 !== this.user.lastMouse.x && lastLine.x2 !== x && lastLine.y1 !== this.user.lastMouse.y && lastLine.y2 !== y)) {
+            this.drawingArea.drawing.push({
+              x1: this.user.lastMouse.x,
+              y1: this.user.lastMouse.y,
+              x2: x,
+              y2: y
+            });
+          }
           return this.user.lastMouse = {
             x: x,
             y: y
@@ -73,13 +78,30 @@ define(['core/drawingArea'], function(DrawingArea) {
     };
 
     DrawThisGame.prototype.draw = function() {
+      var i, k, margin, v, _ref;
       atom.context.clear();
       this.drawingArea.draw();
+      i = 0;
+      margin = 16;
+      _ref = this.players;
+      for (k in _ref) {
+        v = _ref[k];
+        if (v.draw != null) {
+          v.draw(margin + i * (Guesser.W + margin), 432);
+          i++;
+        }
+      }
     };
 
     function DrawThisGame() {
       this.registerInputs();
       this.drawingArea = new DrawingArea();
+      this.players.jim = new Guesser({
+        name: 'Jim'
+      });
+      this.players.andrew = new Guesser({
+        name: 'Andrew'
+      });
     }
 
     DrawThisGame.prototype.registerInputs = function() {

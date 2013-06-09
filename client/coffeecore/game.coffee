@@ -1,10 +1,13 @@
 define [
   'core/drawingArea'
-], (DrawingArea) ->
+  'core/guesser'
+], (DrawingArea, Guesser) ->
     
   class DrawThisGame extends atom.Game
     entities    : []
     drawingArea : null
+    
+    players : {}
     
     user :
       timeElapsed : 0
@@ -47,13 +50,22 @@ define [
             y = @drawingArea.y+@drawingArea.h
           else if y < @drawingArea.y
             y = @drawingArea.y
+          
+          lastLine = @drawingArea[@drawingArea.length-1]
+          if !(lastLine?) or 
+            (lastLine? and
+              lastLine.x1 != @user.lastMouse.x and
+              lastLine.x2 != x and
+              lastLine.y1 != @user.lastMouse.y and
+              lastLine.y2 != y)
             
-          @drawingArea.drawing.push({
-            x1 : @user.lastMouse.x
-            y1 : @user.lastMouse.y
-            x2 : x
-            y2 : y
-          })
+            @drawingArea.drawing.push({
+              x1 : @user.lastMouse.x
+              y1 : @user.lastMouse.y
+              x2 : x
+              y2 : y
+            })            
+          
           @user.lastMouse = {
             x
             y
@@ -67,11 +79,22 @@ define [
       atom.context.clear()
       #(if e.draw? then e.draw()) for e in @entities
       @drawingArea.draw()
+      
+      i = 0
+      margin = 16
+      (
+        if v.draw?
+          v.draw(margin+i*(Guesser.W+margin), 432) 
+          i++
+      ) for k,v of @players
+      
       return
     
     constructor : ->
       @registerInputs()
       @drawingArea = new DrawingArea()
+      @players.jim = new Guesser({ name : 'Jim' })
+      @players.andrew = new Guesser({ name : 'Andrew' })
     
     registerInputs : ->
       atom.input.bind(atom.button.LEFT, 'mouseleft')

@@ -14,6 +14,35 @@ define(['core/player'], function(Player) {
 
     Guesser.prototype.role = 'guesser';
 
+    Guesser.W = 120;
+
+    Guesser.H = 200;
+
+    Guesser.prototype.w = 120;
+
+    Guesser.prototype.h = 200;
+
+    Guesser.prototype.guessWord = function(word) {
+      if (this.words != null) {
+        return this.words.push(word);
+      } else {
+        return this.words = [word];
+      }
+    };
+
+    Guesser.prototype.marginY = 4;
+
+    Guesser.prototype.draw = function(x, y) {
+      var ac;
+      ac = atom.context;
+      ac.lineWidth = 1.0;
+      ac.fillStyle = '#000';
+      ac.strokeRect(x, y, this.w, this.h);
+      ac.textBaseline = 'top';
+      ac.textAlign = 'center';
+      return ac.fillText(this.name, x + (this.w >> 1), y + this.marginY);
+    };
+
     return Guesser;
 
   })(Player);

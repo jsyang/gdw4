@@ -29,6 +29,7 @@ define(function() {
       ac.font = '12px sans-serif';
       ac.fillStyle = '#000';
       ac.textBaseline = 'top';
+      ac.textAlign = 'left';
       ac.fillText('Draw here!', this.x, this.y);
       ac.lineCap = 'round';
       ac.lineWidth = 4.0;
