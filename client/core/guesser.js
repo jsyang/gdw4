@@ -23,24 +23,44 @@ define(['core/player'], function(Player) {
     Guesser.prototype.h = 200;
 
     Guesser.prototype.guessWord = function(word) {
+      var wordObj;
+      wordObj = {
+        word: word,
+        status: 'correct'
+      };
       if (this.words != null) {
-        return this.words.push(word);
+        return this.words.push(wordObj);
       } else {
-        return this.words = [word];
+        return this.words = [wordObj];
       }
     };
 
     Guesser.prototype.marginY = 4;
 
     Guesser.prototype.draw = function(x, y) {
-      var ac;
+      var ac, fontSize, height, margin, w, _i, _len, _ref, _results, _y;
       ac = atom.context;
       ac.lineWidth = 1.0;
       ac.fillStyle = '#000';
       ac.strokeRect(x, y, this.w, this.h);
+      fontSize = 12;
       ac.textBaseline = 'top';
       ac.textAlign = 'center';
-      return ac.fillText(this.name, x + (this.w >> 1), y + this.marginY);
+      ac.font = fontSize + 'px sans-serif';
+      ac.fillText(this.name, x + (this.w >> 1), y + this.marginY);
+      margin = 4;
+      _y = y + (this.h >> 1);
+      height = 20;
+      ac.textAlign = 'center';
+      if (!!(this.words != null)) {
+        _ref = this.words;
+        _results = [];
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          w = _ref[_i];
+          _results.push((ac.fillStyle = w.status === 'incorrect' ? '#F28F8F' : '8FF2A1', ac.fillRect(x, _y - margin, this.w, fontSize + margin * 2), ac.fillStyle = '#000', ac.fillText(w.word, x + (this.w >> 1), _y + (height >> 1) - fontSize), _y += height));
+        }
+        return _results;
+      }
     };
 
     return Guesser;
