@@ -5,7 +5,7 @@ var app = require('http').createServer(handler)
   , canvas = require('./Canvas.js')
   , chat = require('./Chat.js')
 
-app.listen(8080);
+app.listen(8000);
 
 function handler (req, res) {
   fs.readFile(__dirname + '/index.html',

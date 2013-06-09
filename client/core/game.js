@@ -138,7 +138,7 @@ define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
       this.players.andrew = new Guesser({
         name: 'Andrew'
       });
-      this.network.socket = io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080');
+      this.network.socket = io.connect('http://localhost:8000');
       this.network.socket.on('welcome', function() {
         _this.network.connectedToServer = true;
         return _this.network.sendName.apply(_this);

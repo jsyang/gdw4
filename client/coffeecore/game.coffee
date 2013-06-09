@@ -118,7 +118,8 @@ define [
       @players.jim = new Guesser({ name : 'Jim' })
       @players.andrew = new Guesser({ name : 'Andrew' })
       
-      @network.socket = io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080')
+      @network.socket = io.connect('http://localhost:8000')
+      #io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080')
       @network.socket.on('welcome', =>
         @network.connectedToServer = true
         @network.sendName.apply(@)
