@@ -6,8 +6,8 @@ define [
   class DrawThisGame extends atom.Game
     entities    : []
     drawingArea : null
-    
-    players : {}
+    round       : { wordpile : ['dog','car','truck','blue','red','yellow'] }
+    players     : {}
     
     user :
       timeElapsed : 0

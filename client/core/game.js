@@ -12,6 +12,10 @@ define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
 
     DrawThisGame.prototype.drawingArea = null;
 
+    DrawThisGame.prototype.round = {
+      wordpile: ['dog', 'car', 'truck', 'blue', 'red', 'yellow']
+    };
+
     DrawThisGame.prototype.players = {};
 
     DrawThisGame.prototype.user = {
