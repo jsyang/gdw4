@@ -129,8 +129,7 @@ Players.prototype.addPlayer = function(player) {
         points: 0,
         origName: player.name,
         name: this.normalizePlayerName(player.name) || 'Player_' + this.playerCount,
-        drawing:	false,
-        guessing:   true,
+        role:	"g",
         guessedWords:	[]
     }
     return this.players[player.playerId];
@@ -241,8 +240,7 @@ Players.prototype.getPlayerData = function() {
             lastWinTime:    this.players[playerId].lastWinTime,
             points:         this.players[playerId].points,
             name:           this.players[playerId].name,
-            drawing:		this.players[playerId].drawing,
-            guessing:		this.players[playerId].guessing,
+            role:		    this.players[playerId].role,
             guessesRemaining:	this.players[playerId].guessesRemaining
         });
     }
