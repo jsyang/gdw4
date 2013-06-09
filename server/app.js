@@ -3,6 +3,7 @@ var app = require('http').createServer(handler)
   , fs = require('fs')
   , players = require('./Players.js')
   , canvas = require('./Canvas.js')
+  , chat = require('./Chat.js')
 
 app.listen(8080);
 
@@ -20,12 +21,12 @@ function handler (req, res) {
 }
 
 players.init();
+
+players.setWords([ "blue", "car", "purple", "monkey", "orange", "bear"]);
+players.setWinningWords(["purple", "monkey"]);
+
 canvas.init();
-
-canvas.addLine(1,2,3,4);
-canvas.addLine(5,6,7,8);
-canvas.addLine(9,10,11,12);
-
+chat.init();
 
 io.sockets.on('connection', function (socket) {
 
@@ -37,10 +38,12 @@ io.sockets.on('connection', function (socket) {
             name: data.playerName
         });
         console.log('SOCKET.IO player added: '+ p.name + ' from '+ ip + ' for socket '+ socket.id);
-        emitPlayerUpdate(socket);
+        emitPlayerUpdate();
+        emitCanvasUpdate();
+        emitChatUpdate();
+
         if (players.getPlayerCount() == 1) {
-            // start game!
-            //emitNewQuestion();
+            emitRoundStartedEvent();
         }
   });
 
@@ -56,10 +59,35 @@ io.sockets.on('connection', function (socket) {
   });
   
   socket.on('addLine', function(data) {
-	  canvas.addLine(data.x1, data.y1, data.x2, data.y2);
+	  canvas.addLine(data);
 	  console.log('SOCKET.IO added line: ' + data); 
 	  emitCanvasUpdate();
-  }
+  });
+  
+  socket.on('sendMessage', function(data) {
+	 
+	  var pname = players.getPlayerName(socket.id); 
+	  data.name = pname;
+	  chat.sendMessage(data);
+	  console.log('SOCKET.IO sent message: ' + data); 
+	  emitChatUpdate();
+  });
+  
+   socket.on('guessWord', function(data) {
+	 
+	  if(players.guessWord(data, socket.id)) {
+	  
+		  var pname = players.getPlayerName(socket.id); 
+	
+		  chat.sendMessage({ message: pname +" guessed '" + data.word + "'" });
+		  emitPlayerUpdate(); 
+		  emitChatUpdate();
+		  
+          if(players.roundIsOver()) {
+	          emitRoundEndedEvent();
+          }
+	  }
+  });
 
   socket.emit('welcome', { hello: 'world' });
   socket.on('my other event', function (data) {
@@ -68,19 +96,28 @@ io.sockets.on('connection', function (socket) {
 });
 
 
-function emitPlayerUpdate(socket) {
+function emitPlayerUpdate() {
     var playerData = players.getPlayerData();
-    if (socket) {
-        socket.broadcast.emit('players', playerData); // emit to all but socket 
-        playerData.msg = 'Welcome, '+ players.getPlayerName(socket.id);
-        socket.emit('players', playerData); // emit only to socket
-        
-    } else {
-        io.sockets.emit('players', playerData); // emit to everyone (points update)
-    }
+    io.sockets.emit('players', playerData); // emit to everyone (points update)
+    
 }
 
-function emitCanvasUpdate(socket) {
-    io.sockets.emit('canvas', canvas.getLines()); // emit to everyone
+function emitCanvasUpdate() {
+    var canvasData = canvas.getCanvasData();
+    io.sockets.emit('canvas', canvasData); // emit to everyone
+}
+
+function emitChatUpdate() {
+    var chatData = chat.getChatData();
+    io.sockets.emit('chat', chatData); // emit to everyone
+}
+
+
+function emitRoundStartedEvent() {
+    io.sockets.emit('roundStarted'); // emit to everyone
+}
+
+function emitRoundEndedEvent() {
+    io.sockets.emit('roundEnded'); // emit to everyone
 }
 

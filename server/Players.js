@@ -21,8 +21,95 @@ Players.prototype.init = function() {
     this.playerCount = 0; // count of total players joined, not active players
     this.activePlayerCount = 0; // count of players currently connected
     this.winningSocket = null;
+    this.drawingSocket = null;
+    this.words = [];
+    this.winningWords = [];
+    this.winnnerName = null;
+    
 }
 
+
+
+Players.prototype.setWords = function(wordlist) {
+    var newwords = [];
+    for (var i = 0; i < wordlist.length; i++) {
+      newwords.push({
+            word:    wordlist[i],
+            guessed: false
+      })
+    }
+    this.words = newwords;
+}
+
+Players.prototype.setWinningWords = function(wordlist) {
+    this.winningWords = wordlist;
+}
+
+Players.prototype.playerHasGuesses = function (playerId) {
+   if (this.players[playerId].guessedWords.length < 2) {
+	   return true;
+   }
+   console.log(playerId+": is out of guesses!");
+   return false;
+}
+
+Players.prototype.wordNotGuessed = function (checkword) {
+   for (var i = 0; i < this.words.length; i++) {
+     if (this.words[i].word == checkword && !this.words[i].guessed) {
+       return true;
+     } 
+   }
+   console.log(checkword+": word not found or already guessed");
+   return false;
+}
+
+Players.prototype.markWordGuessed = function (playerId, checkword) {
+
+   this.players[playerId].guessedWords.push(checkword);
+   
+   for (var i = 0; i < this.words.length; i++) {
+     if (this.words[i].word == checkword) {
+       this.words[i].guessed = true;     
+     } 
+     
+   }
+}
+
+Players.prototype.guessWord = function(data, playerId) {
+
+    if(this.playerHasGuesses(playerId) && this.wordNotGuessed(data.word)){
+        this.markWordGuessed(playerId, data.word);
+        return true;
+    }
+   
+    return false;
+}
+
+Players.prototype.roundIsOver = function() {
+
+  var guessedWord1 = false;
+  var guessedWord2 = false;
+
+  //round is over if bother winning words are guessed
+  for (var i = 0; i < this.words.length; i++) {
+     if (this.words[i].word == this.winningWords[0] && this.words[i].guessed) {
+       guessedWord1 = true;    
+     }
+     
+     if (this.words[i].word == this.winningWords[1] && this.words[i].guessed) {
+       guessedWord2 = true;    
+     } 
+     
+   }
+   
+   if(guessedWord1 && guessedWord2) {
+       console.log("The round is over");
+	   return true;
+   }
+   return false;
+  
+
+}
 
 /*
  * Adds a player. Only name and id required
@@ -41,7 +128,10 @@ Players.prototype.addPlayer = function(player) {
         clientIp: player.clientIp || '',
         points: 0,
         origName: player.name,
-        name: this.normalizePlayerName(player.name) || 'Player_' + this.playerCount
+        name: this.normalizePlayerName(player.name) || 'Player_' + this.playerCount,
+        drawing:	false,
+        guessing:   true,
+        guessedWords:	[]
     }
     return this.players[player.playerId];
 }
@@ -139,7 +229,10 @@ Players.prototype.getPlayerCount = function() {
  */
 Players.prototype.getPlayerData = function() {
     var playerData = { 
-        players: []
+        players: [],
+        words:			this.words,
+        winningWords:	this.winningWords
+        
     };
     for (var playerId in this.players){
         playerData.players.push({
@@ -147,7 +240,10 @@ Players.prototype.getPlayerData = function() {
             lastActiveTime: this.players[playerId].lastActiveTime,
             lastWinTime:    this.players[playerId].lastWinTime,
             points:         this.players[playerId].points,
-            name:           this.players[playerId].name
+            name:           this.players[playerId].name,
+            drawing:		this.players[playerId].drawing,
+            guessing:		this.players[playerId].guessing,
+            guessesRemaining:	this.players[playerId].guessesRemaining
         });
     }
     playerData.players.sort(function(a,b) {
