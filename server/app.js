@@ -35,7 +35,8 @@ io.sockets.on('connection', function (socket) {
         var p = players.addPlayer({
             playerId: socket.id,
             clientIp: ip,
-            name: data.playerName
+            name: data.playerName,
+            role: data.role
         });
         console.log('SOCKET.IO player added: '+ p.name + ' from '+ ip + ' for socket '+ socket.id);
         emitPlayerUpdate();
