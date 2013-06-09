@@ -26,11 +26,12 @@
         </style>
     </head>
     <body><canvas></canvas></body>
+    <script src="http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080/socket.io/socket.io.js"></script>
     <script src="lib/require.js"></script>
     <script>
       require.config({
         paths : {
-          'text' : 'lib/text',
+          'text'    : 'lib/text',
         }
       });
       require(['core/init']);

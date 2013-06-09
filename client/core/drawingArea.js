@@ -42,6 +42,11 @@ define(function() {
       return _results;
     };
 
+    DrawingArea.prototype.add = function(line) {
+      this.drawing.push(line);
+      return this.game.network.socket.emit('addLine', line);
+    };
+
     DrawingArea.prototype.clear = function() {
       return this.drawing = [];
     };

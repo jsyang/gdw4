@@ -27,7 +27,9 @@ define ->
         ac.stroke()
       ) for line in @drawing
       
-      
+    add : (line) ->
+      @drawing.push(line)
+      @game.network.socket.emit('addLine', line)
       
     clear : ->
       @drawing = []
