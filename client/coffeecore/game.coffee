@@ -27,12 +27,14 @@ define [
       current : 'waitfordrawing'
       
       waitfordrawing : (dt) ->
-        if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
-          if @isInsideUIThing(@drawingArea)
-            @mode.current = 'drawing'
-        @user.lastMouse =
-          x : atom.input.mouse.x
-          y : atom.input.mouse.y
+        if @network.role is 'd'
+          console.log('d')
+          if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
+            if @isInsideUIThing(@drawingArea)
+              @mode.current = 'drawing'
+          @user.lastMouse =
+            x : atom.input.mouse.x
+            y : atom.input.mouse.y
       
       drawing : (dt) ->
         if (atom.input.released('touchfinger') or atom.input.released('mouseleft'))
@@ -59,7 +61,7 @@ define [
               lastLine.y1 != @user.lastMouse.y and
               lastLine.y2 != y)
             
-            @drawingArea.drawing.push({
+            @drawingArea.add({
               x1 : @user.lastMouse.x
               y1 : @user.lastMouse.y
               x2 : x
@@ -90,11 +92,39 @@ define [
       
       return
     
+    network:
+      socket : null
+      
+      role : null
+      
+      sendName : ->
+        sock = @network.socket
+        name = prompt('your name')
+        role = prompt('d for drawer, g for guesser')
+        @network.role = role
+        sock.emit('playerJoin', { playerName : name, role : role })
+        if role is 'g'
+          sock.on('canvas', (response) => @network.receiveCanvas.call(@, response) )
+          
+      receiveCanvas : (response) ->
+        @drawingArea.drawing = response.lines
+      
+      connectedToServer : false
+      
+    
     constructor : ->
       @registerInputs()
-      @drawingArea = new DrawingArea()
+      @drawingArea = new DrawingArea({ game : @ })
       @players.jim = new Guesser({ name : 'Jim' })
       @players.andrew = new Guesser({ name : 'Andrew' })
+      
+      @network.socket = io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080')
+      @network.socket.on('welcome', =>
+        @network.connectedToServer = true
+        @network.sendName.apply(@)
+      )
+      
+    
     
     registerInputs : ->
       atom.input.bind(atom.button.LEFT, 'mouseleft')
