@@ -8,10 +8,6 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
 
     __extends(DrawThisGame, _super);
 
-    DrawThisGame.prototype.entities = [];
-
-    DrawThisGame.prototype.drawingArea = null;
-
     DrawThisGame.prototype.round = {
       wordpile: ['dog', 'car', 'truck', 'blue', 'red', 'yellow']
     };
@@ -19,7 +15,6 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
     DrawThisGame.prototype.players = {};
 
     DrawThisGame.prototype.user = {
-      initialDraw: false,
       timeElapsed: 0,
       lastMouse: {
         x: 0,
@@ -33,59 +28,83 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
 
     DrawThisGame.prototype.findUIThing = function(thing) {};
 
+    DrawThisGame.prototype.clampMouseInsideDrawingArea = function() {
+      var x, y, _ref;
+      _ref = [atom.input.mouse.x, atom.input.mouse.y], x = _ref[0], y = _ref[1];
+      if (x > this.drawingArea.x + this.drawingArea.w) {
+        x = this.drawingArea.x + this.drawingArea.w;
+      } else if (x < this.drawingArea.x) {
+        x = this.drawingArea.x;
+      }
+      if (y > this.drawingArea.y + this.drawingArea.h) {
+        y = this.drawingArea.y + this.drawingArea.h;
+      } else if (y < this.drawingArea.y) {
+        y = this.drawingArea.y;
+      }
+      return {
+        x: x,
+        y: y
+      };
+    };
+
     DrawThisGame.prototype.mode = {
       current: 'waitfordrawing',
+      waitingforready: function(dt) {},
+      waitingforguess: function(dt) {},
+      predrawing: function(dt) {},
       waitfordrawing: function(dt) {
-        if (this.network.role === 'd') {
-          if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
-            if (this.isPointInsideUIThing(atom.input.mouse, this.drawingArea)) {
-              this.mode.current = 'drawing';
-            }
+        if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
+          if (this.isPointInsideUIThing(atom.input.mouse, this.drawingArea)) {
+            this.mode.current = 'drawing';
+            this.user.timeElapsed = 0;
           }
-          return this.user.lastMouse = {
-            x: atom.input.mouse.x,
-            y: atom.input.mouse.y
-          };
         }
+        return this.user.lastMouse = {
+          x: atom.input.mouse.x,
+          y: atom.input.mouse.y
+        };
       },
       drawing: function(dt) {
-        var lastLine, x, y, _ref;
+        var lastLine, pen;
+        this.user.timeElapsed += dt;
         if (atom.input.released('touchfinger') || atom.input.released('mouseleft')) {
-          return this.mode.current = 'waitfordrawing';
-        } else {
-          _ref = [atom.input.mouse.x, atom.input.mouse.y], x = _ref[0], y = _ref[1];
-          if (x > this.drawingArea.x + this.drawingArea.w) {
-            x = this.drawingArea.x + this.drawingArea.w;
-          } else if (x < this.drawingArea.x) {
-            x = this.drawingArea.x;
-          }
-          if (y > this.drawingArea.y + this.drawingArea.h) {
-            y = this.drawingArea.y + this.drawingArea.h;
-          } else if (y < this.drawingArea.y) {
-            y = this.drawingArea.y;
-          }
-          lastLine = this.drawingArea[this.drawingArea.length - 1];
-          if (!(lastLine != null) || ((lastLine != null) && lastLine.x1 !== this.user.lastMouse.x && lastLine.x2 !== x && lastLine.y1 !== this.user.lastMouse.y && lastLine.y2 !== y)) {
+          this.mode.current = 'waitfordrawing';
+          if (this.user.timeElapsed > 0.03) {
+            pen = this.clampMouseInsideDrawingArea();
             this.drawingArea.add({
               x1: this.user.lastMouse.x,
               y1: this.user.lastMouse.y,
-              x2: x,
-              y2: y
+              x2: pen.x + 0.5,
+              y2: pen.y + 0.5
+            });
+            this.user.timeElapsed = 0;
+            return this.user.lastMouse = {
+              x: pen.x,
+              y: pen.y
+            };
+          }
+        } else {
+          pen = this.clampMouseInsideDrawingArea();
+          lastLine = this.drawingArea[this.drawingArea.length - 1];
+          if (!(lastLine != null) || ((lastLine != null) && lastLine.x1 !== this.user.lastMouse.x && lastLine.x2 !== pen.x && lastLine.y1 !== this.user.lastMouse.y && lastLine.y2 !== pen.y)) {
+            this.drawingArea.add({
+              x1: this.user.lastMouse.x,
+              y1: this.user.lastMouse.y,
+              x2: pen.x,
+              y2: pen.y
             });
           }
           return this.user.lastMouse = {
-            x: x,
-            y: y
+            x: pen.x,
+            y: pen.y
           };
         }
-      },
-      predrawing: function(dt) {
-        return this.updateEntities();
       }
     };
 
     DrawThisGame.prototype.draw = function() {
       var i, k, margin, v, _ref;
+      this.timer.draw();
       i = 0;
       margin = 16;
       _ref = this.players;
@@ -106,17 +125,20 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
         var sock,
           _this = this;
         sock = this.network.socket;
-        this.network.name = prompt('your name');
-        this.network.role = prompt('d for drawer, g for guesser');
+        this.network.name = prompt('Your name', 'Player');
+        this.network.role = prompt('d for drawer, g for guesser', 'd');
         sock.emit('playerJoin', {
           playerName: this.network.name,
           role: this.network.role
         });
         switch (this.network.role) {
           case 'g':
+            this.mode.current = 'waitforguess';
             return sock.on('canvas', function(response) {
               return _this.network.receiveCanvas.call(_this, response);
             });
+          case 'd':
+            return this.mode.current = 'waitfordrawing';
         }
       },
       receiveCanvas: function(response) {
@@ -149,6 +171,7 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
       return atom.resizeCb = function() {
         _this.drawingArea.draw();
         _this.chat.resize().draw();
+        _this.timer.resize().draw();
       };
     };
 

@@ -21,7 +21,7 @@ define ->
       ac.font         = @FONTSIZE+'px sans-serif'
       ac.fillStyle    = '#000'
       return
-      
+    
     draw : ->
       ac = atom.context
       ac.clearRect(@x, @y, @w, @h)
