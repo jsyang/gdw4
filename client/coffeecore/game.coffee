@@ -1,19 +1,24 @@
 define [
+  'core/playerCard'
+  'core/predrawingArea'
   'core/drawingArea'
-  'core/guesser'
   'core/chat'
   'core/timer'
-], (DrawingArea, Guesser, Chat, Timer) ->
+], (PlayerCard, PredrawingArea, DrawingArea, Chat, Timer) ->
     
   class DrawThisGame extends atom.Game
+  
+    # predrawingArea
     # drawingArea
     # chat
     # timer
+    # playerCards
     
     round       : { wordpile : ['dog','car','truck','blue','red','yellow'] }
     players     : {}
     
     user :
+      cardsX : 0 # current position of the next player card
       timeElapsed : 0
       lastMouse : 
         x : 0
@@ -49,7 +54,7 @@ define [
       
     mode :
     
-      current : 'waitfordrawing'
+      current : 'predrawing'
       
       waitingforready : (dt) ->
       
@@ -114,15 +119,7 @@ define [
     
     draw : ->
       @timer.draw()
-      
-      i = 0
-      margin = 16
-      (
-        if v.draw?
-          v.draw(margin+i*(Guesser.W+margin), 432) 
-          i++
-      ) for k,v of @players
-      
+      c.draw() for c in @playerCards
       return
     
     network:
@@ -130,6 +127,8 @@ define [
       
       name : null
       role : null
+      
+      whoseTurn : 'SomeOtherPlayer' # hook this up so we all know whose turn it is
       
       sendName : ->
         sock = @network.socket
@@ -146,10 +145,11 @@ define [
         
         switch @network.role
           when 'g'
-            @mode.current = 'waitforguess'
+            @mode.current = 'waitingforguess'
             sock.on('canvas', (response) => @network.receiveCanvas.call(@, response) )
           when 'd'
-            @mode.current = 'waitfordrawing'
+            @mode.current   = 'predrawing'
+            @predrawingArea.draw()
           
       receiveCanvas : (response) ->
         @drawingArea.drawing = response.lines
@@ -165,10 +165,26 @@ define [
       uiParams =
         game : @
       
-      @drawingArea  = new DrawingArea(uiParams)
-      @chat         = new Chat(uiParams)
-      @timer        = new Timer(uiParams)
+      @predrawingArea = new PredrawingArea(uiParams)
+      @drawingArea    = new DrawingArea(uiParams)
+      @chat           = new Chat(uiParams)
+      @timer          = new Timer(uiParams)
+      @playerCards    = []
       
+      @user.cardsX += @drawingArea.x
+      
+      @playerCards.push(
+        new PlayerCard({
+          name  : 'Jim'
+          x     : @user.cardsX
+          game  : @
+        })
+      )
+      
+      @registerNetwork()
+      return
+    
+    registerNetwork : ->
       @network.socket = io.connect('http://localhost:8000')
       #io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080') # EC2 server
       
@@ -176,6 +192,7 @@ define [
         @network.connectedToServer = true
         @network.sendName.apply(@)
       )
+      return
     
     registerEvents : ->
       # Make sure user can see everything when the window is resized
@@ -193,5 +210,4 @@ define [
       # todo : calculate the time left : difference in round start time (received from server) and round time limit
       79310 # $$.R(200, 79310)
     
-    update : (dt) ->
-      @mode[@mode.current].apply(@, [dt])
+    update : (dt) -> @mode[@mode.current].apply(@, [dt])

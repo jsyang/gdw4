@@ -88,16 +88,22 @@ define ->
       ac.lineWidth    = 1
       ac.strokeStyle  = '#888'
       ac.fillStyle    = '#000'
-      ac.font         = @FONTSIZE + 'px sans-serif'
       ac.textAlign    = 'left'
       ac.textBaseline = 'top'
       
       ac.strokeRect(x, y, @w, @h)
       (
         name = if m.name.length > @MAXNAMELENGTH then m.name.substr(0,@MAXNAMELENGTH-3)+'...' else m.name
-        # msg  = m.msg
-        # todo : split long lines
-        ac.fillText("[#{name}] #{m.msg}", x, y, maxW)
+        name = "[#{name}] "
+        # todo : split long lines, maybe we can do this in add()?
+        
+        ac.font = "bold #{@FONTSIZE}px sans-serif"
+        ac.fillText(name, x, y, maxW)
+        
+        msgX    = x + ac.measureText(name).width
+        ac.font = "#{@FONTSIZE}px sans-serif"
+        ac.fillText(m.msg, msgX, y, maxW)
+        
         y += 12
       ) for m in @messages
       

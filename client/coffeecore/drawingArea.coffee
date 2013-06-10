@@ -9,7 +9,8 @@ define ->
     
     constructor : (params) ->
       @[k] = v for k, v of params
-      @resize().clear().draw()
+      @resize().clear()
+      #.draw()
     
     setLineStyle : ->
       ac = atom.context
@@ -28,7 +29,12 @@ define ->
       ac.textBaseline = 'top'
       ac.textAlign    = 'left'
       ac.fillStyle    = '#000'
-      ac.fillText('Draw here!',@x,@y)
+      if @game.network.role is 'd'
+        ac.fillText("Draw here!",@x,@y)
+        
+      # instead of showing it here, indicate it in the player cards?
+      #else
+      #  ac.fillText("#{@game.network.whoseTurn} is drawing.",@x,@y)
       
       @drawLine(line) for line in @drawing
       @

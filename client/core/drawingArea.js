@@ -20,7 +20,7 @@ define(function() {
         v = params[k];
         this[k] = v;
       }
-      this.resize().clear().draw();
+      this.resize().clear();
     }
 
     DrawingArea.prototype.setLineStyle = function() {
@@ -41,7 +41,9 @@ define(function() {
       ac.textBaseline = 'top';
       ac.textAlign = 'left';
       ac.fillStyle = '#000';
-      ac.fillText('Draw here!', this.x, this.y);
+      if (this.game.network.role === 'd') {
+        ac.fillText("Draw here!", this.x, this.y);
+      }
       _ref = this.drawing;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         line = _ref[_i];

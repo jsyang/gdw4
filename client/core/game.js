@@ -2,7 +2,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function(DrawingArea, Guesser, Chat, Timer) {
+define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat', 'core/timer'], function(PlayerCard, PredrawingArea, DrawingArea, Chat, Timer) {
   var DrawThisGame;
   return DrawThisGame = (function(_super) {
 
@@ -15,6 +15,7 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
     DrawThisGame.prototype.players = {};
 
     DrawThisGame.prototype.user = {
+      cardsX: 0,
       timeElapsed: 0,
       lastMouse: {
         x: 0,
@@ -48,7 +49,7 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
     };
 
     DrawThisGame.prototype.mode = {
-      current: 'waitfordrawing',
+      current: 'predrawing',
       waitingforready: function(dt) {},
       waitingforguess: function(dt) {},
       predrawing: function(dt) {},
@@ -103,17 +104,12 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
     };
 
     DrawThisGame.prototype.draw = function() {
-      var i, k, margin, v, _ref;
+      var c, _i, _len, _ref;
       this.timer.draw();
-      i = 0;
-      margin = 16;
-      _ref = this.players;
-      for (k in _ref) {
-        v = _ref[k];
-        if (v.draw != null) {
-          v.draw(margin + i * (Guesser.W + margin), 432);
-          i++;
-        }
+      _ref = this.playerCards;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        c = _ref[_i];
+        c.draw();
       }
     };
 
@@ -121,6 +117,7 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
       socket: null,
       name: null,
       role: null,
+      whoseTurn: 'SomeOtherPlayer',
       sendName: function() {
         var sock,
           _this = this;
@@ -133,12 +130,13 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
         });
         switch (this.network.role) {
           case 'g':
-            this.mode.current = 'waitforguess';
+            this.mode.current = 'waitingforguess';
             return sock.on('canvas', function(response) {
               return _this.network.receiveCanvas.call(_this, response);
             });
           case 'd':
-            return this.mode.current = 'waitfordrawing';
+            this.mode.current = 'predrawing';
+            return this.predrawingArea.draw();
         }
       },
       receiveCanvas: function(response) {
@@ -149,22 +147,35 @@ define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function
     };
 
     function DrawThisGame() {
-      var uiParams,
-        _this = this;
+      var uiParams;
       this.registerInputs();
       this.registerEvents();
       uiParams = {
         game: this
       };
+      this.predrawingArea = new PredrawingArea(uiParams);
       this.drawingArea = new DrawingArea(uiParams);
       this.chat = new Chat(uiParams);
       this.timer = new Timer(uiParams);
+      this.playerCards = [];
+      this.user.cardsX += this.drawingArea.x;
+      this.playerCards.push(new PlayerCard({
+        name: 'Jim',
+        x: this.user.cardsX,
+        game: this
+      }));
+      this.registerNetwork();
+      return;
+    }
+
+    DrawThisGame.prototype.registerNetwork = function() {
+      var _this = this;
       this.network.socket = io.connect('http://localhost:8000');
       this.network.socket.on('welcome', function() {
         _this.network.connectedToServer = true;
         return _this.network.sendName.apply(_this);
       });
-    }
+    };
 
     DrawThisGame.prototype.registerEvents = function() {
       var _this = this;

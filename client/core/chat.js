@@ -97,7 +97,7 @@ define(function() {
     };
 
     Chat.prototype.draw = function() {
-      var ac, m, maxW, name, x, y, _i, _len, _ref;
+      var ac, m, maxW, msgX, name, x, y, _i, _len, _ref;
       ac = atom.context;
       x = this.x;
       y = this.margin;
@@ -106,7 +106,6 @@ define(function() {
       ac.lineWidth = 1;
       ac.strokeStyle = '#888';
       ac.fillStyle = '#000';
-      ac.font = this.FONTSIZE + 'px sans-serif';
       ac.textAlign = 'left';
       ac.textBaseline = 'top';
       ac.strokeRect(x, y, this.w, this.h);
@@ -114,7 +113,12 @@ define(function() {
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         m = _ref[_i];
         name = m.name.length > this.MAXNAMELENGTH ? m.name.substr(0, this.MAXNAMELENGTH - 3) + '...' : m.name;
-        ac.fillText("[" + name + "] " + m.msg, x, y, maxW);
+        name = "[" + name + "] ";
+        ac.font = "bold " + this.FONTSIZE + "px sans-serif";
+        ac.fillText(name, x, y, maxW);
+        msgX = x + ac.measureText(name).width;
+        ac.font = "" + this.FONTSIZE + "px sans-serif";
+        ac.fillText(m.msg, msgX, y, maxW);
         y += 12;
       }
       return this;
