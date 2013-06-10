@@ -18,7 +18,7 @@ define(function() {
 
     PredrawingArea.prototype.words = [];
 
-    PredrawingArea.prototype.chosen = ['tasty', 'rat'];
+    PredrawingArea.prototype.chosen = [];
 
     PredrawingArea.prototype.button = {
       ok: {
@@ -116,7 +116,12 @@ define(function() {
         word1 = this.chosen[0] || '';
         word2 = this.chosen[1] || '';
         ac.textAlign = 'left';
-        ac.fillText("You'll be drawing '" + word1 + " " + word2 + "'.", this.x + this.margin, this.y + (this.FONTSIZE >> 1) + this.margin + wordH * 6);
+        ac.fillStyle = '#000';
+        if (word1.length + word2.length === 0) {
+          ac.fillText("No words selected.", this.x + this.margin, this.y + (this.FONTSIZE >> 1) + this.margin + wordH * 6);
+        } else {
+          ac.fillText("You'll be drawing '" + word1 + (' ' + word2) + "'.", this.x + this.margin, this.y + (this.FONTSIZE >> 1) + this.margin + wordH * 6);
+        }
         x = this.x + this.w;
         y = this.y + this.FONTSIZE + wordH * 6;
         _ref1 = [this.button.reset, this.button.ok];

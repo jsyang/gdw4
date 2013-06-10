@@ -9,7 +9,7 @@ define ->
     
     words   : []
     
-    chosen  : ['tasty', 'rat']
+    chosen  : []
     
     button :
       ok :
@@ -81,6 +81,8 @@ define ->
       
       if @game.network.role is 'd'
         ac.textAlign  = 'left'
+        # Maybe put a timer here for drawer inactivity
+        # If you haven't chosen words by then, the next player gets to go.
         ac.fillText("Pick two words to draw :", @x+@margin, @y+(@FONTSIZE>>1)+@margin)
         
         w.draw() for w in @words
@@ -89,7 +91,11 @@ define ->
         word1         = @chosen[0] or ''
         word2         = @chosen[1] or ''
         ac.textAlign  = 'left'
-        ac.fillText("You'll be drawing '#{word1} #{word2}'.", @x+@margin, @y+(@FONTSIZE>>1)+@margin+wordH*6)
+        ac.fillStyle  = '#000'
+        if word1.length + word2.length is 0
+          ac.fillText("No words selected.", @x+@margin, @y+(@FONTSIZE>>1)+@margin+wordH*6)
+        else 
+          ac.fillText("You'll be drawing '#{word1}#{' '+word2}'.", @x+@margin, @y+(@FONTSIZE>>1)+@margin+wordH*6)
         
         x = @x + @w
         y = @y+@FONTSIZE+wordH*6 

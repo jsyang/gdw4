@@ -22,6 +22,10 @@ define(function() {
 
     Word.prototype.value = null;
 
+    Word.prototype.chosen = false;
+
+    Word.prototype.correct = false;
+
     Word.prototype.type = 'predrawing';
 
     Word.prototype.index = -1;
@@ -40,7 +44,11 @@ define(function() {
       ac.textBaseline = 'middle';
       ac.textAlign = 'center';
       ac.font = "bold " + this.FONTSIZE + "px sans-serif";
-      ac.fillStyle = '#000';
+      if (this.type === 'predrawing') {
+        ac.fillStyle = this.chosen ? '#4EB581' : '#000';
+      } else {
+        ac.fillStyle = '#000';
+      }
       return this;
     };
 

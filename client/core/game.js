@@ -47,6 +47,7 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
       waitingforready: function(dt) {},
       waitingforguess: function(dt) {},
       predrawing: function(dt) {
+        var w, _i, _j, _len, _len1, _ref, _ref1;
         if (atom.input.released('touchfinger') || atom.input.released('mouseleft')) {
           if (this.isPointInsideUIThing(atom.input.mouse, this.predrawingArea.button.ok)) {
             if (this.predrawingArea.chosen.length === 2) {
@@ -54,9 +55,25 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
               this.mode.current = 'waitfordrawing';
               this.drawingArea.draw();
             }
-          }
-          if (this.isPointInsideUIThing(atom.input.mouse, this.predrawingArea.button.reset)) {
-            alert('reset clicked! all selected words are to be reset');
+          } else if (this.isPointInsideUIThing(atom.input.mouse, this.predrawingArea.button.reset)) {
+            this.predrawingArea.chosen = [];
+            _ref = this.predrawingArea.words;
+            for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+              w = _ref[_i];
+              w.chosen = false;
+            }
+            this.predrawingArea.draw();
+          } else if (this.predrawingArea.chosen.length < 2) {
+            _ref1 = this.predrawingArea.words;
+            for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+              w = _ref1[_j];
+              if (this.isPointInsideUIThing(atom.input.mouse, w)) {
+                w.chosen = true;
+                this.predrawingArea.chosen.push(w.value);
+                break;
+              }
+            }
+            this.predrawingArea.draw();
           }
         }
       },

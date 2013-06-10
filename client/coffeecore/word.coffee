@@ -11,6 +11,8 @@ define ->
     
     value     : null
     
+    chosen    : false
+    correct   : false
     type      : 'predrawing' # predrawing or guessing
     index     : -1
     
@@ -24,7 +26,11 @@ define ->
       ac.textBaseline = 'middle'
       ac.textAlign    = 'center'
       ac.font         = "bold #{@FONTSIZE}px sans-serif"
-      ac.fillStyle    = '#000'
+      if @type is 'predrawing'
+        ac.fillStyle    = if @chosen then '#4EB581' else '#000'
+      else
+        ac.fillStyle    = '#000'
+      
       @
     
     clear : ->

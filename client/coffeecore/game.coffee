@@ -68,9 +68,20 @@ define [
               @mode.current = 'waitfordrawing'
               @drawingArea.draw()
             
-          if @isPointInsideUIThing(atom.input.mouse, @predrawingArea.button.reset)
-            alert('reset clicked! all selected words are to be reset')
+          else if @isPointInsideUIThing(atom.input.mouse, @predrawingArea.button.reset)
+            @predrawingArea.chosen = []
+            w.chosen = false for w in @predrawingArea.words
+            @predrawingArea.draw()
             
+          
+          else if @predrawingArea.chosen.length < 2
+            (
+              if @isPointInsideUIThing(atom.input.mouse, w)
+                w.chosen = true
+                @predrawingArea.chosen.push(w.value)
+                break
+            ) for w in @predrawingArea.words
+            @predrawingArea.draw()
             
         return
       
