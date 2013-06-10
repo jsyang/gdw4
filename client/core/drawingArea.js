@@ -19,7 +19,16 @@ define(function() {
         this[k] = v;
       }
       this.drawing = [];
+      this.draw();
     }
+
+    DrawingArea.prototype.setLineStyle = function() {
+      var ac;
+      ac = atom.context;
+      ac.lineCap = 'round';
+      ac.lineWidth = 4.0;
+      return ac.strokeStyle = '#000';
+    };
 
     DrawingArea.prototype.draw = function() {
       var ac, line, _i, _len, _ref;
@@ -28,24 +37,30 @@ define(function() {
       ac.fillStyle = '#ddd';
       ac.fillRect(this.x, this.y, this.w, this.h);
       ac.font = '12px sans-serif';
-      ac.fillStyle = '#000';
       ac.textBaseline = 'top';
       ac.textAlign = 'left';
+      ac.fillStyle = '#000';
       ac.fillText('Draw here!', this.x, this.y);
-      ac.lineCap = 'round';
-      ac.lineWidth = 4.0;
       _ref = this.drawing;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         line = _ref[_i];
-        ac.beginPath();
-        ac.moveTo(line.x1, line.y1);
-        ac.lineTo(line.x2, line.y2);
-        ac.stroke();
+        this.drawLine(line);
       }
+    };
+
+    DrawingArea.prototype.drawLine = function(line) {
+      var ac;
+      ac = atom.context;
+      this.setLineStyle();
+      ac.beginPath();
+      ac.moveTo(line.x1, line.y1);
+      ac.lineTo(line.x2, line.y2);
+      ac.stroke();
     };
 
     DrawingArea.prototype.add = function(line) {
       this.drawing.push(line);
+      this.drawLine(line);
       return this.game.network.socket.emit('addLine', line);
     };
 

@@ -45,13 +45,16 @@ define ->
     constructor : (params) ->
       @[k] = v for k, v of params
       if !@game? then throw 'game was not set!'
+      
       @resize()
       @createChatInput()
+      @draw()
       
     add : (msgObj) ->
       if @messages.length+1 > @MAXLINES
         @messages.shift()
       @messages.push(msgObj)
+      @draw()
   
     messages : [
       {
@@ -73,14 +76,13 @@ define ->
       @MAXLINES = ((@h - (@FONTSIZE+@margin*2)) / @FONTSIZE)>>0
     
     draw : ->
-      # todo : only update this section of the UI
       ac = atom.context
       
       x     = @x
       y     = @margin
       maxW  = @w-@margin*2
       
-      # ac.clearRect(x,y,@w,@h)
+      ac.clearRect(x,y,@w,@h)
       
       ac.lineWidth    = 1
       ac.strokeStyle  = '#888'

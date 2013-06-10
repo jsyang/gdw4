@@ -19,6 +19,7 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
     DrawThisGame.prototype.players = {};
 
     DrawThisGame.prototype.user = {
+      initialDraw: false,
       timeElapsed: 0,
       lastMouse: {
         x: 0,
@@ -85,9 +86,6 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
 
     DrawThisGame.prototype.draw = function() {
       var i, k, margin, v, _ref;
-      atom.context.clear();
-      this.drawingArea.draw();
-      this.chat.draw();
       i = 0;
       margin = 16;
       _ref = this.players;
@@ -114,14 +112,16 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
           playerName: this.network.name,
           role: this.network.role
         });
-        if (this.network.role === 'g') {
-          return sock.on('canvas', function(response) {
-            return _this.network.receiveCanvas.call(_this, response);
-          });
+        switch (this.network.role) {
+          case 'g':
+            return sock.on('canvas', function(response) {
+              return _this.network.receiveCanvas.call(_this, response);
+            });
         }
       },
       receiveCanvas: function(response) {
-        return this.drawingArea.drawing = response.lines;
+        this.drawingArea.drawing = response.lines;
+        return this.drawingArea.draw();
       },
       connectedToServer: false
     };

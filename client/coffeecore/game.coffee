@@ -11,6 +11,7 @@ define [
     players     : {}
     
     user :
+      initialDraw : false
       timeElapsed : 0
       lastMouse : 
         x : 0
@@ -66,7 +67,7 @@ define [
               y1 : @user.lastMouse.y
               x2 : x
               y2 : y
-            })            
+            })      
           
           @user.lastMouse = {
             x
@@ -76,12 +77,11 @@ define [
       predrawing : (dt) ->
         @updateEntities()
     
-    
     draw : ->
-      atom.context.clear()
+      # Only update the relevant areas so we don't have to constantly redraw stuff.
+      #atom.context.clear()
       #(if e.draw? then e.draw()) for e in @entities
-      @drawingArea.draw()
-      @chat.draw()
+      
       
       i = 0
       margin = 16
@@ -110,11 +110,15 @@ define [
           role        : @network.role
         })
         
-        if @network.role is 'g'
-          sock.on('canvas', (response) => @network.receiveCanvas.call(@, response) )
+        #sock.on('chat', (response) => @network.receiveChat.call(@, response) )
+        
+        switch @network.role
+          when 'g'
+            sock.on('canvas', (response) => @network.receiveCanvas.call(@, response) )
           
       receiveCanvas : (response) ->
         @drawingArea.drawing = response.lines
+        @drawingArea.draw()
       
       connectedToServer : false
       
@@ -132,6 +136,7 @@ define [
       
       @network.socket = io.connect('http://localhost:8000')
       #io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080')
+      
       @network.socket.on('welcome', =>
         @network.connectedToServer = true
         @network.sendName.apply(@)

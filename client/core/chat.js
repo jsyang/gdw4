@@ -62,13 +62,15 @@ define(function() {
       }
       this.resize();
       this.createChatInput();
+      this.draw();
     }
 
     Chat.prototype.add = function(msgObj) {
       if (this.messages.length + 1 > this.MAXLINES) {
         this.messages.shift();
       }
-      return this.messages.push(msgObj);
+      this.messages.push(msgObj);
+      return this.draw();
     };
 
     Chat.prototype.messages = [
@@ -97,6 +99,7 @@ define(function() {
       x = this.x;
       y = this.margin;
       maxW = this.w - this.margin * 2;
+      ac.clearRect(x, y, this.w, this.h);
       ac.lineWidth = 1;
       ac.strokeStyle = '#888';
       ac.fillStyle = '#000';
