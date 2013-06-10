@@ -2,7 +2,8 @@ define [
   'core/drawingArea'
   'core/guesser'
   'core/chat'
-], (DrawingArea, Guesser, Chat) ->
+  'core/timer'
+], (DrawingArea, Guesser, Chat, Timer) ->
     
   class DrawThisGame extends atom.Game
     entities    : []
@@ -17,11 +18,11 @@ define [
         x : 0
         y : 0
     
-    isInsideUIThing : (thing) ->
-      atom.input.mouse.x >= thing.x and
-      atom.input.mouse.x < thing.x + thing.w and
-      atom.input.mouse.y >= thing.y and
-      atom.input.mouse.y < thing.y + thing.h
+    isPointInsideUIThing : (point, thing) ->
+      point.x >= thing.x and
+      point.x < thing.x + thing.w and
+      point.y >= thing.y and
+      point.y < thing.y + thing.h
     
     findUIThing : (thing) ->
       
@@ -31,7 +32,7 @@ define [
       waitfordrawing : (dt) ->
         if @network.role is 'd'
           if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
-            if @isInsideUIThing(@drawingArea)
+            if @isPointInsideUIThing(atom.input.mouse, @drawingArea)
               @mode.current = 'drawing'
           @user.lastMouse =
             x : atom.input.mouse.x
@@ -125,12 +126,15 @@ define [
     
     constructor : ->
       @registerInputs()
+      @registerEvents()
       
       uiParams =
         game : @
       
       @drawingArea  = new DrawingArea(uiParams)
       @chat         = new Chat(uiParams)
+      @timer        = new Timer(uiParams)
+      
       #@players.jim = new Guesser({ name : 'Jim' })
       #@players.andrew = new Guesser({ name : 'Andrew' })
       
@@ -141,12 +145,19 @@ define [
         @network.connectedToServer = true
         @network.sendName.apply(@)
       )
-      
     
+    registerEvents : ->
+      atom.resizeCb = =>
+        @drawingArea.draw()
+        @chat.resize().draw()
+        return 
     
     registerInputs : ->
       atom.input.bind(atom.button.LEFT, 'mouseleft')
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger')
+    
+    timeLeft : ->
+      79310
     
     update : (dt) ->
       @mode[@mode.current].apply(@, [dt])

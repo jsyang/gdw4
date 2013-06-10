@@ -168,13 +168,17 @@ define(function() {
   atom.canvas.onmouseup = atom.input.onmouseup.bind(atom.input);
   atom.canvas.onmousewheel = atom.input.onmousewheel.bind(atom.input);
   atom.canvas.oncontextmenu = atom.input.oncontextmenu.bind(atom.input);
-  window.onresize = function(e) {
+  atom._onresize = function() {
     atom.canvas.width = window.innerWidth;
     atom.canvas.height = window.innerHeight;
     atom.width = atom.canvas.width;
-    return atom.height = atom.canvas.height;
+    atom.height = atom.canvas.height;
+    if (atom.resizeCb != null) {
+      return atom.resizeCb();
+    }
   };
-  window.onresize();
+  atom._onresize();
+  window.onresize = atom._onresize;
   Game = (function() {
 
     function Game() {}

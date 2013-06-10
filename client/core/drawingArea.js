@@ -4,13 +4,15 @@ define(function() {
   var DrawingArea;
   return DrawingArea = (function() {
 
-    DrawingArea.prototype.x = 16;
+    DrawingArea.prototype.x = 0;
 
-    DrawingArea.prototype.y = 16;
+    DrawingArea.prototype.y = 0;
 
     DrawingArea.prototype.w = 600;
 
     DrawingArea.prototype.h = 400;
+
+    DrawingArea.prototype.margin = 16;
 
     function DrawingArea(params) {
       var k, v;
@@ -18,8 +20,7 @@ define(function() {
         v = params[k];
         this[k] = v;
       }
-      this.drawing = [];
-      this.draw();
+      this.resize().clear().draw();
     }
 
     DrawingArea.prototype.setLineStyle = function() {
@@ -46,6 +47,7 @@ define(function() {
         line = _ref[_i];
         this.drawLine(line);
       }
+      return this;
     };
 
     DrawingArea.prototype.drawLine = function(line) {
@@ -56,6 +58,7 @@ define(function() {
       ac.moveTo(line.x1, line.y1);
       ac.lineTo(line.x2, line.y2);
       ac.stroke();
+      return this;
     };
 
     DrawingArea.prototype.add = function(line) {
@@ -64,8 +67,15 @@ define(function() {
       return this.game.network.socket.emit('addLine', line);
     };
 
+    DrawingArea.prototype.resize = function() {
+      this.x = this.margin;
+      this.y = this.margin;
+      return this;
+    };
+
     DrawingArea.prototype.clear = function() {
-      return this.drawing = [];
+      this.drawing = [];
+      return this;
     };
 
     return DrawingArea;

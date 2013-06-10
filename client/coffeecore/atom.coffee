@@ -146,12 +146,16 @@ define ->
   atom.canvas.onmousewheel    = atom.input.onmousewheel.bind(atom.input)
   atom.canvas.oncontextmenu   = atom.input.oncontextmenu.bind(atom.input)
   
-  window.onresize = (e) ->
+  atom._onresize = ->
     atom.canvas.width = window.innerWidth
     atom.canvas.height = window.innerHeight
     atom.width = atom.canvas.width
     atom.height = atom.canvas.height
-  window.onresize()
+    if atom.resizeCb?
+      atom.resizeCb()
+
+  atom._onresize()
+  window.onresize = atom._onresize
   
   #window.onorientationchange = (e) ->
   #  atom.orientation = window.orientation

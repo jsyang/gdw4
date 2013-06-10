@@ -1,14 +1,15 @@
 define ->
   class DrawingArea
-    x : 16
-    y : 16
+    x : 0
+    y : 0
     w : 600
     h : 400
     
+    margin : 16
+    
     constructor : (params) ->
       @[k] = v for k, v of params
-      @drawing = []
-      @draw()
+      @resize().clear().draw()
     
     setLineStyle : ->
       ac = atom.context
@@ -30,7 +31,7 @@ define ->
       ac.fillText('Draw here!',@x,@y)
       
       @drawLine(line) for line in @drawing
-      return
+      @
     
     drawLine : (line) ->
       ac = atom.context
@@ -39,13 +40,18 @@ define ->
       ac.moveTo(line.x1, line.y1)
       ac.lineTo(line.x2, line.y2)
       ac.stroke()
-      return
+      @
     
     add : (line) ->
       @drawing.push(line)
       @drawLine(line)
       @game.network.socket.emit('addLine', line)
       
+    resize : ->
+      @x = @margin
+      @y = @margin
+      @
+    
     clear : ->
       @drawing = []
-      
+      @

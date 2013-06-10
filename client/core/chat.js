@@ -48,7 +48,8 @@ define(function() {
         v = css[k];
         style[k] = v;
       }
-      return document.body.appendChild(this.inputEl);
+      document.body.appendChild(this.inputEl);
+      return this;
     };
 
     function Chat(params) {
@@ -60,9 +61,7 @@ define(function() {
       if (!(this.game != null)) {
         throw 'game was not set!';
       }
-      this.resize();
-      this.createChatInput();
-      this.draw();
+      this.resize().createChatInput().draw();
     }
 
     Chat.prototype.add = function(msgObj) {
@@ -90,11 +89,15 @@ define(function() {
     Chat.prototype.resize = function() {
       this.x = this.game.drawingArea.x + this.game.drawingArea.w + this.margin;
       this.w = atom.width - this.game.drawingArea.x - this.game.drawingArea.w - this.margin * 2;
-      return this.MAXLINES = ((this.h - (this.FONTSIZE + this.margin * 2)) / this.FONTSIZE) >> 0;
+      this.MAXLINES = ((this.h - (this.FONTSIZE + this.margin * 2)) / this.FONTSIZE) >> 0;
+      if (this.inputEl != null) {
+        this.inputEl.style.width = this.w;
+      }
+      return this;
     };
 
     Chat.prototype.draw = function() {
-      var ac, m, maxW, name, x, y, _i, _len, _ref, _results;
+      var ac, m, maxW, name, x, y, _i, _len, _ref;
       ac = atom.context;
       x = this.x;
       y = this.margin;
@@ -108,12 +111,13 @@ define(function() {
       ac.textBaseline = 'top';
       ac.strokeRect(x, y, this.w, this.h);
       _ref = this.messages;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         m = _ref[_i];
-        _results.push((name = m.name.length > this.MAXNAMELENGTH ? m.name.substr(0, this.MAXNAMELENGTH - 3) + '...' : m.name, ac.fillText("[" + name + "] " + m.msg, x, y, maxW), y += 12));
+        name = m.name.length > this.MAXNAMELENGTH ? m.name.substr(0, this.MAXNAMELENGTH - 3) + '...' : m.name;
+        ac.fillText("[" + name + "] " + m.msg, x, y, maxW);
+        y += 12;
       }
-      return _results;
+      return this;
     };
 
     return Chat;

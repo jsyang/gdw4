@@ -2,7 +2,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, Guesser, Chat) {
+define(['core/drawingArea', 'core/guesser', 'core/chat', 'core/timer'], function(DrawingArea, Guesser, Chat, Timer) {
   var DrawThisGame;
   return DrawThisGame = (function(_super) {
 
@@ -27,8 +27,8 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
       }
     };
 
-    DrawThisGame.prototype.isInsideUIThing = function(thing) {
-      return atom.input.mouse.x >= thing.x && atom.input.mouse.x < thing.x + thing.w && atom.input.mouse.y >= thing.y && atom.input.mouse.y < thing.y + thing.h;
+    DrawThisGame.prototype.isPointInsideUIThing = function(point, thing) {
+      return point.x >= thing.x && point.x < thing.x + thing.w && point.y >= thing.y && point.y < thing.y + thing.h;
     };
 
     DrawThisGame.prototype.findUIThing = function(thing) {};
@@ -38,7 +38,7 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
       waitfordrawing: function(dt) {
         if (this.network.role === 'd') {
           if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
-            if (this.isInsideUIThing(this.drawingArea)) {
+            if (this.isPointInsideUIThing(atom.input.mouse, this.drawingArea)) {
               this.mode.current = 'drawing';
             }
           }
@@ -130,11 +130,13 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
       var uiParams,
         _this = this;
       this.registerInputs();
+      this.registerEvents();
       uiParams = {
         game: this
       };
       this.drawingArea = new DrawingArea(uiParams);
       this.chat = new Chat(uiParams);
+      this.timer = new Timer(uiParams);
       this.network.socket = io.connect('http://localhost:8000');
       this.network.socket.on('welcome', function() {
         _this.network.connectedToServer = true;
@@ -142,9 +144,21 @@ define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, 
       });
     }
 
+    DrawThisGame.prototype.registerEvents = function() {
+      var _this = this;
+      return atom.resizeCb = function() {
+        _this.drawingArea.draw();
+        _this.chat.resize().draw();
+      };
+    };
+
     DrawThisGame.prototype.registerInputs = function() {
       atom.input.bind(atom.button.LEFT, 'mouseleft');
       return atom.input.bind(atom.touch.TOUCHING, 'touchfinger');
+    };
+
+    DrawThisGame.prototype.timeLeft = function() {
+      return 79310;
     };
 
     DrawThisGame.prototype.update = function(dt) {
