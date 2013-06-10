@@ -74,6 +74,7 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
               }
             }
             this.predrawingArea.draw();
+            atom.playSound('tick');
           }
         }
       },

@@ -82,6 +82,7 @@ define [
                 break
             ) for w in @predrawingArea.words
             @predrawingArea.draw()
+            atom.playSound('tick')
             
         return
       
