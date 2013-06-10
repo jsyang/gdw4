@@ -2,17 +2,11 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat', 'core/timer'], function(PlayerCard, PredrawingArea, DrawingArea, Chat, Timer) {
+define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat', 'core/timer', 'core/word'], function(PlayerCard, PredrawingArea, DrawingArea, Chat, Timer, Word) {
   var DrawThisGame;
   return DrawThisGame = (function(_super) {
 
     __extends(DrawThisGame, _super);
-
-    DrawThisGame.prototype.round = {
-      wordpile: ['dog', 'car', 'truck', 'blue', 'red', 'yellow']
-    };
-
-    DrawThisGame.prototype.players = {};
 
     DrawThisGame.prototype.user = {
       cardsX: 0,
@@ -52,7 +46,20 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
       current: 'predrawing',
       waitingforready: function(dt) {},
       waitingforguess: function(dt) {},
-      predrawing: function(dt) {},
+      predrawing: function(dt) {
+        if (atom.input.released('touchfinger') || atom.input.released('mouseleft')) {
+          if (this.isPointInsideUIThing(atom.input.mouse, this.predrawingArea.button.ok)) {
+            if (this.predrawingArea.chosen.length === 2) {
+              this.drawingArea.chosen = this.predrawingArea.chosen;
+              this.mode.current = 'waitfordrawing';
+              this.drawingArea.draw();
+            }
+          }
+          if (this.isPointInsideUIThing(atom.input.mouse, this.predrawingArea.button.reset)) {
+            alert('reset clicked! all selected words are to be reset');
+          }
+        }
+      },
       waitfordrawing: function(dt) {
         if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
           if (this.isPointInsideUIThing(atom.input.mouse, this.drawingArea)) {
@@ -146,8 +153,42 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
       connectedToServer: false
     };
 
+    DrawThisGame.prototype.addPlayer = function(player) {
+      this.playerCards.push(new PlayerCard({
+        name: player.name,
+        x: this.user.cardsX,
+        game: this
+      }));
+      this.user.cardsX += PlayerCard.W + PlayerCard.MARGIN;
+      return this.playerCards;
+    };
+
+    DrawThisGame.prototype.removePlayer = function(player) {
+      var found, p, _i, _j, _len, _len1, _ref, _ref1;
+      _ref = this.playerCards;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        p = _ref[_i];
+        if (player.name === p.name) {
+          found = p;
+          break;
+        }
+      }
+      if (found != null) {
+        this.user.cardsX -= PlayerCard.W + PlayerCard.MARGIN;
+        found.clear();
+        this.playerCards.splice(this.playerCards.indexOf(found), 1);
+        _ref1 = this.playerCards;
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          p = _ref1[_j];
+          p.clear();
+          p.reorganize();
+        }
+      }
+      return this.playerCards;
+    };
+
     function DrawThisGame() {
-      var uiParams;
+      var uiParams, w, wlist, _i, _len;
       this.registerInputs();
       this.registerEvents();
       uiParams = {
@@ -159,11 +200,17 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
       this.timer = new Timer(uiParams);
       this.playerCards = [];
       this.user.cardsX += this.drawingArea.x;
-      this.playerCards.push(new PlayerCard({
-        name: 'Jim',
-        x: this.user.cardsX,
-        game: this
-      }));
+      this.addPlayer({
+        name: 'Jim'
+      });
+      wlist = ['dog', 'cat', 'rat', 'car', 'hat', 'bacon', 'tasty', 'nasty', 'yummy', 'long-winded', 'tuesday'];
+      for (_i = 0, _len = wlist.length; _i < _len; _i++) {
+        w = wlist[_i];
+        this.predrawingArea.add(new Word({
+          value: w
+        }));
+      }
+      this.predrawingArea.draw();
       this.registerNetwork();
       return;
     }

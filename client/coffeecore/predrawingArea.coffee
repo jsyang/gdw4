@@ -7,37 +7,107 @@ define ->
     margin    : 16
     FONTSIZE  : 20
     
-    words : []
-      
+    words   : []
+    
+    chosen  : ['tasty', 'rat']
+    
+    button :
+      ok :
+        text  : 'OK'
+        x     : 0
+        y     : 0
+        w     : 60
+        h     : 40
+        color : '#ACFAD3'
+        
+      reset :
+        text  : 'Reset'
+        x     : 0
+        y     : 0
+        w     : 80
+        h     : 40
+        color : '#FA8CB1'
+        
     constructor : (params) ->
       @[k] = v for k, v of params
       if !@game? then throw 'game was not set!'
       @resize()
     
-    addWord : (word) ->
-      words.push(word)
-      @
+    add : (word) ->
+      if @words.length < 10
+        word.index = @words.length
+        @words.push(word)
+        @arrangeWords()
     
     setTextStyle : ->
       ac = atom.context
       ac.textBaseline = 'middle'
-      ac.textAlign    = 'center'
       ac.font         = "bold #{@FONTSIZE}px sans-serif"
       ac.fillStyle    = '#000'
       @
     
+    arrangeWords : ->
+      wordW = @words[0].w
+      wordH = @words[0].h
+      
+      x = @x + (((@w>>1) - wordW)>>1)
+      y = @y + 2*@margin + @FONTSIZE 
+      (
+        w.x = x
+        w.y = y
+        y += wordH + @margin
+      ) for w in @words[0...5]
+      
+      x = @x + (@w>>1) + (((@w>>1) - wordW)>>1)
+      y = @y + 2*@margin + @FONTSIZE 
+      (
+        w.x = x
+        w.y = y
+        y += wordH + @margin
+      ) for w in @words[5...10]
+      
+      @
+    
+    clear : -> atom.context.clearRect(@x, @y, @w, @h)
+    
     draw : ->
       ac = atom.context
-      ac.clearRect(@x, @y, @w, @h)
+      @clear()
       
       ac.fillStyle = '#eee'
       ac.fillRect(@x, @y, @w, @h)
       
       @setTextStyle()
+      
       if @game.network.role is 'd'
-        ac.fillText("Choose 2 words to draw", @x+(@w>>1), @y+(@FONTSIZE>>1)+@margin)
+        ac.textAlign  = 'left'
+        ac.fillText("Pick two words to draw :", @x+@margin, @y+(@FONTSIZE>>1)+@margin)
+        
+        w.draw() for w in @words
+        
+        wordH         = @words[0].h + @words[0].margin
+        word1         = @chosen[0] or ''
+        word2         = @chosen[1] or ''
+        ac.textAlign  = 'left'
+        ac.fillText("You'll be drawing '#{word1} #{word2}'.", @x+@margin, @y+(@FONTSIZE>>1)+@margin+wordH*6)
+        
+        x = @x + @w
+        y = @y+@FONTSIZE+wordH*6 
+        (
+          x -= @margin + b.w
+          b.x = x
+          b.y = y-(b.h>>1)
+          ac.fillStyle = b.color
+          ac.fillRect(b.x, b.y, b.w, b.h)
+          ac.fillStyle = '#000'
+          ac.textAlign  = 'center'
+          ac.fillText(b.text, x+(b.w>>1), y)
+        ) for b in [@button.reset, @button.ok]
+        
       else
-        ac.fillText("Waiting on #{@game.network.whoseTurn} to draw...", @x+(@w>>1), @y+(@h>>1))
+        ac.textAlign  = 'center'
+        ac.fillText("Waiting on #{@game.network.whoseTurn} to begin...", @x+(@w>>1), @y+(@h>>1))
+      
       @
       
     resize : ->

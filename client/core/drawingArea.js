@@ -14,6 +14,8 @@ define(function() {
 
     DrawingArea.prototype.margin = 16;
 
+    DrawingArea.prototype.chosen = [];
+
     function DrawingArea(params) {
       var k, v;
       for (k in params) {
@@ -42,7 +44,7 @@ define(function() {
       ac.textAlign = 'left';
       ac.fillStyle = '#000';
       if (this.game.network.role === 'd') {
-        ac.fillText("Draw here!", this.x, this.y);
+        ac.fillText("Draw '" + (this.chosen.join(' ')) + "' here! ", this.x, this.y);
       }
       _ref = this.drawing;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {

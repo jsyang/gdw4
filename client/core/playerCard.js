@@ -8,6 +8,8 @@ define(function() {
 
     PlayerCard.H = 120;
 
+    PlayerCard.MARGIN = 16;
+
     PlayerCard.prototype.w = 160;
 
     PlayerCard.prototype.h = 120;
@@ -36,6 +38,13 @@ define(function() {
       this.resize().draw();
     }
 
+    PlayerCard.prototype.reorganize = function() {
+      var i;
+      i = this.game.playerCards.indexOf(this);
+      this.x = this.margin + i * (this.w + this.margin);
+      return this;
+    };
+
     PlayerCard.prototype.resize = function() {
       this.y = this.game.drawingArea.y + this.game.drawingArea.h + this.margin + this.game.timer.h + this.margin;
       return this;
@@ -63,8 +72,10 @@ define(function() {
       ac = atom.context;
       this.clear();
       ac.strokeStyle = '#000';
-      ac.lineWidth = 1.0;
-      ac.strokeRect(this.x, this.y, this.w, this.h);
+      ac.lineWidth = 1;
+      ac.fillStyle = '#efeffe';
+      ac.fillRect(this.x, this.y, this.w, this.h);
+      ac.strokeRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2);
       this.setTextStyle();
       ac.fillText(this.name, this.x + (this.w >> 1), this.y + (this.h >> 1));
       return this;

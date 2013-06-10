@@ -4,7 +4,8 @@ define [
   'core/drawingArea'
   'core/chat'
   'core/timer'
-], (PlayerCard, PredrawingArea, DrawingArea, Chat, Timer) ->
+  'core/word'
+], (PlayerCard, PredrawingArea, DrawingArea, Chat, Timer, Word) ->
     
   class DrawThisGame extends atom.Game
   
@@ -13,9 +14,7 @@ define [
     # chat
     # timer
     # playerCards
-    
-    round       : { wordpile : ['dog','car','truck','blue','red','yellow'] }
-    players     : {}
+    # buttons
     
     user :
       cardsX : 0 # current position of the next player card
@@ -60,7 +59,20 @@ define [
       
       waitingforguess : (dt) ->
       
-      predrawing : (dt) -> # todo : select the words you want to draw
+      predrawing : (dt) ->
+        if (atom.input.released('touchfinger') or atom.input.released('mouseleft'))
+        
+          if @isPointInsideUIThing(atom.input.mouse, @predrawingArea.button.ok)
+            if @predrawingArea.chosen.length is 2
+              @drawingArea.chosen = @predrawingArea.chosen
+              @mode.current = 'waitfordrawing'
+              @drawingArea.draw()
+            
+          if @isPointInsideUIThing(atom.input.mouse, @predrawingArea.button.reset)
+            alert('reset clicked! all selected words are to be reset')
+            
+            
+        return
       
       waitfordrawing : (dt) ->
         if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
@@ -157,6 +169,34 @@ define [
       
       connectedToServer : false
       
+    addPlayer : (player) ->
+      @playerCards.push(
+        new PlayerCard({
+          name  : player.name
+          x     : @user.cardsX
+          game  : @
+        })
+      )
+      @user.cardsX += PlayerCard.W + PlayerCard.MARGIN
+      @playerCards
+    
+    removePlayer : (player) ->
+      (
+        if player.name is p.name
+          found = p
+          break
+      ) for p in @playerCards
+      
+      if found?
+        @user.cardsX -= PlayerCard.W + PlayerCard.MARGIN
+        found.clear()
+        @playerCards.splice(@playerCards.indexOf(found), 1)
+        (
+          p.clear()
+          p.reorganize()
+        ) for p in @playerCards
+        
+      @playerCards
     
     constructor : ->
       @registerInputs()
@@ -170,16 +210,27 @@ define [
       @chat           = new Chat(uiParams)
       @timer          = new Timer(uiParams)
       @playerCards    = []
+      @user.cardsX    += @drawingArea.x
       
-      @user.cardsX += @drawingArea.x
+      @addPlayer({ name : 'Jim' })
       
-      @playerCards.push(
-        new PlayerCard({
-          name  : 'Jim'
-          x     : @user.cardsX
-          game  : @
-        })
-      )
+      # testing
+      wlist = [
+        'dog'
+        'cat'
+        'rat'
+        'car'
+        'hat'
+        'bacon'
+        'tasty'
+        'nasty'
+        'yummy'
+        'long-winded'
+        'tuesday'
+      ]
+      
+      @predrawingArea.add(new Word({ value : w })) for w in wlist
+      @predrawingArea.draw()
       
       @registerNetwork()
       return

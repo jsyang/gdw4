@@ -9,7 +9,6 @@ define ->
     inputEl   : null
   
     onKeyPress : (e) ->
-      # console.log(e.which)
       switch e.which
         when 13 # ENTER
           # todo: actually hook this up to network

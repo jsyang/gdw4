@@ -7,6 +7,8 @@ define ->
     
     margin : 16
     
+    chosen : []
+    
     constructor : (params) ->
       @[k] = v for k, v of params
       @resize().clear()
@@ -30,7 +32,7 @@ define ->
       ac.textAlign    = 'left'
       ac.fillStyle    = '#000'
       if @game.network.role is 'd'
-        ac.fillText("Draw here!",@x,@y)
+        ac.fillText("Draw '#{@chosen.join(' ')}' here! ",@x,@y)
         
       # instead of showing it here, indicate it in the player cards?
       #else

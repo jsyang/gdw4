@@ -18,6 +18,27 @@ define(function() {
 
     PredrawingArea.prototype.words = [];
 
+    PredrawingArea.prototype.chosen = ['tasty', 'rat'];
+
+    PredrawingArea.prototype.button = {
+      ok: {
+        text: 'OK',
+        x: 0,
+        y: 0,
+        w: 60,
+        h: 40,
+        color: '#ACFAD3'
+      },
+      reset: {
+        text: 'Reset',
+        x: 0,
+        y: 0,
+        w: 80,
+        h: 40,
+        color: '#FA8CB1'
+      }
+    };
+
     function PredrawingArea(params) {
       var k, v;
       for (k in params) {
@@ -30,32 +51,89 @@ define(function() {
       this.resize();
     }
 
-    PredrawingArea.prototype.addWord = function(word) {
-      words.push(word);
-      return this;
+    PredrawingArea.prototype.add = function(word) {
+      if (this.words.length < 10) {
+        word.index = this.words.length;
+        this.words.push(word);
+        return this.arrangeWords();
+      }
     };
 
     PredrawingArea.prototype.setTextStyle = function() {
       var ac;
       ac = atom.context;
       ac.textBaseline = 'middle';
-      ac.textAlign = 'center';
       ac.font = "bold " + this.FONTSIZE + "px sans-serif";
       ac.fillStyle = '#000';
       return this;
     };
 
+    PredrawingArea.prototype.arrangeWords = function() {
+      var w, wordH, wordW, x, y, _i, _j, _len, _len1, _ref, _ref1;
+      wordW = this.words[0].w;
+      wordH = this.words[0].h;
+      x = this.x + (((this.w >> 1) - wordW) >> 1);
+      y = this.y + 2 * this.margin + this.FONTSIZE;
+      _ref = this.words.slice(0, 5);
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        w = _ref[_i];
+        w.x = x;
+        w.y = y;
+        y += wordH + this.margin;
+      }
+      x = this.x + (this.w >> 1) + (((this.w >> 1) - wordW) >> 1);
+      y = this.y + 2 * this.margin + this.FONTSIZE;
+      _ref1 = this.words.slice(5, 10);
+      for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+        w = _ref1[_j];
+        w.x = x;
+        w.y = y;
+        y += wordH + this.margin;
+      }
+      return this;
+    };
+
+    PredrawingArea.prototype.clear = function() {
+      return atom.context.clearRect(this.x, this.y, this.w, this.h);
+    };
+
     PredrawingArea.prototype.draw = function() {
-      var ac;
+      var ac, b, w, word1, word2, wordH, x, y, _i, _j, _len, _len1, _ref, _ref1;
       ac = atom.context;
-      ac.clearRect(this.x, this.y, this.w, this.h);
+      this.clear();
       ac.fillStyle = '#eee';
       ac.fillRect(this.x, this.y, this.w, this.h);
       this.setTextStyle();
       if (this.game.network.role === 'd') {
-        ac.fillText("Choose 2 words to draw", this.x + (this.w >> 1), this.y + (this.FONTSIZE >> 1) + this.margin);
+        ac.textAlign = 'left';
+        ac.fillText("Pick two words to draw :", this.x + this.margin, this.y + (this.FONTSIZE >> 1) + this.margin);
+        _ref = this.words;
+        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+          w = _ref[_i];
+          w.draw();
+        }
+        wordH = this.words[0].h + this.words[0].margin;
+        word1 = this.chosen[0] || '';
+        word2 = this.chosen[1] || '';
+        ac.textAlign = 'left';
+        ac.fillText("You'll be drawing '" + word1 + " " + word2 + "'.", this.x + this.margin, this.y + (this.FONTSIZE >> 1) + this.margin + wordH * 6);
+        x = this.x + this.w;
+        y = this.y + this.FONTSIZE + wordH * 6;
+        _ref1 = [this.button.reset, this.button.ok];
+        for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+          b = _ref1[_j];
+          x -= this.margin + b.w;
+          b.x = x;
+          b.y = y - (b.h >> 1);
+          ac.fillStyle = b.color;
+          ac.fillRect(b.x, b.y, b.w, b.h);
+          ac.fillStyle = '#000';
+          ac.textAlign = 'center';
+          ac.fillText(b.text, x + (b.w >> 1), y);
+        }
       } else {
-        ac.fillText("Waiting on " + this.game.network.whoseTurn + " to draw...", this.x + (this.w >> 1), this.y + (this.h >> 1));
+        ac.textAlign = 'center';
+        ac.fillText("Waiting on " + this.game.network.whoseTurn + " to begin...", this.x + (this.w >> 1), this.y + (this.h >> 1));
       }
       return this;
     };
