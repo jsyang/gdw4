@@ -1,7 +1,100 @@
 define ->
   class Chat
+  
+    w         : 400
+    h         : 400
+    margin    : 16
+  
+    FONTSIZE  : 12
+    inputEl   : null
+  
+    onKeyPress : (e) ->
+      # console.log(e.which)
+      switch e.which
+        when 13 # ENTER
+          #alert("todo: send chat message #{e.target.value}")
+          # todo: actually hook this up
+          @add({
+            name  : @game.network.name
+            msg   : e.target.value
+          })
+          e.target.value = ''
+          #e.target.blur();
+        
+      return
+  
+    createChatInput : ->
+      @inputEl = document.createElement('input')
+      @inputEl = $$.extend( @inputEl, {
+        onkeypress  : (e) => @onKeyPress(e)
+        type        : 'text'
+      })
+      
+      style = @inputEl.style
+      css =
+        position  : 'absolute'
+        left      : @x
+        top       : @h - @FONTSIZE
+        height    : @FONTSIZE+@margin
+        width     : @w
+        zIndex    : 2
+      
+      style[k] = v for k,v of css
+      document.body.appendChild(@inputEl)
+  
     constructor : (params) ->
       @[k] = v for k, v of params
       if !@game? then throw 'game was not set!'
+      @resize()
+      @createChatInput()
       
+    add : (msgObj) ->
+      if @messages.length+1 > @MAXLINES
+        @messages.shift()
+      @messages.push(msgObj)
+  
+    messages : [
+      {
+        name  : 'Jim'
+        msg   : 'Hi there!'
+      },
+      {
+        name  : 'Jim'
+        msg   : 'This is a test!'
+      },
+    ]
+    
+    MAXLINES      : 20
+    MAXNAMELENGTH : 16
+    
+    resize : ->
+      @x = @game.drawingArea.x+@game.drawingArea.w+@margin
+      @w = atom.width-@game.drawingArea.x-@game.drawingArea.w-@margin*2
+      @MAXLINES = ((@h - (@FONTSIZE+@margin*2)) / @FONTSIZE)>>0
+    
+    draw : ->
+      # todo : only update this section of the UI
+      ac = atom.context
+      
+      x     = @x
+      y     = @margin
+      maxW  = @w-@margin*2
+      
+      # ac.clearRect(x,y,@w,@h)
+      
+      ac.lineWidth    = 1
+      ac.strokeStyle  = '#888'
+      ac.fillStyle    = '#000'
+      ac.font         = @FONTSIZE + 'px sans-serif'
+      ac.textAlign    = 'left'
+      ac.textBaseline = 'top'
+      
+      ac.strokeRect(x, y, @w, @h)
+      (
+        name = if m.name.length > @MAXNAMELENGTH then m.name.substr(0,@MAXNAMELENGTH-3)+'...' else m.name
+        # msg  = m.msg
+        # todo : split long lines
+        ac.fillText("[#{name}] #{m.msg}", x, y, maxW)
+        y += 12
+      ) for m in @messages
     

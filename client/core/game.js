@@ -2,7 +2,7 @@
 var __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
-define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
+define(['core/drawingArea', 'core/guesser', 'core/chat'], function(DrawingArea, Guesser, Chat) {
   var DrawThisGame;
   return DrawThisGame = (function(_super) {
 
@@ -36,7 +36,6 @@ define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
       current: 'waitfordrawing',
       waitfordrawing: function(dt) {
         if (this.network.role === 'd') {
-          console.log('d');
           if (atom.input.down('touchfinger') || atom.input.down('mouseleft')) {
             if (this.isInsideUIThing(this.drawingArea)) {
               this.mode.current = 'drawing';
@@ -88,6 +87,7 @@ define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
       var i, k, margin, v, _ref;
       atom.context.clear();
       this.drawingArea.draw();
+      this.chat.draw();
       i = 0;
       margin = 16;
       _ref = this.players;
@@ -102,19 +102,19 @@ define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
 
     DrawThisGame.prototype.network = {
       socket: null,
+      name: null,
       role: null,
       sendName: function() {
-        var name, role, sock,
+        var sock,
           _this = this;
         sock = this.network.socket;
-        name = prompt('your name');
-        role = prompt('d for drawer, g for guesser');
-        this.network.role = role;
+        this.network.name = prompt('your name');
+        this.network.role = prompt('d for drawer, g for guesser');
         sock.emit('playerJoin', {
-          playerName: name,
-          role: role
+          playerName: this.network.name,
+          role: this.network.role
         });
-        if (role === 'g') {
+        if (this.network.role === 'g') {
           return sock.on('canvas', function(response) {
             return _this.network.receiveCanvas.call(_this, response);
           });
@@ -127,17 +127,14 @@ define(['core/drawingArea', 'core/guesser'], function(DrawingArea, Guesser) {
     };
 
     function DrawThisGame() {
-      var _this = this;
+      var uiParams,
+        _this = this;
       this.registerInputs();
-      this.drawingArea = new DrawingArea({
+      uiParams = {
         game: this
-      });
-      this.players.jim = new Guesser({
-        name: 'Jim'
-      });
-      this.players.andrew = new Guesser({
-        name: 'Andrew'
-      });
+      };
+      this.drawingArea = new DrawingArea(uiParams);
+      this.chat = new Chat(uiParams);
       this.network.socket = io.connect('http://localhost:8000');
       this.network.socket.on('welcome', function() {
         _this.network.connectedToServer = true;

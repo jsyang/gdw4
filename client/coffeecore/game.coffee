@@ -1,7 +1,8 @@
 define [
   'core/drawingArea'
   'core/guesser'
-], (DrawingArea, Guesser) ->
+  'core/chat'
+], (DrawingArea, Guesser, Chat) ->
     
   class DrawThisGame extends atom.Game
     entities    : []
@@ -28,7 +29,6 @@ define [
       
       waitfordrawing : (dt) ->
         if @network.role is 'd'
-          console.log('d')
           if (atom.input.down('touchfinger') or atom.input.down('mouseleft'))
             if @isInsideUIThing(@drawingArea)
               @mode.current = 'drawing'
@@ -81,6 +81,7 @@ define [
       atom.context.clear()
       #(if e.draw? then e.draw()) for e in @entities
       @drawingArea.draw()
+      @chat.draw()
       
       i = 0
       margin = 16
@@ -95,15 +96,21 @@ define [
     network:
       socket : null
       
+      name : null
       role : null
       
       sendName : ->
         sock = @network.socket
-        name = prompt('your name')
-        role = prompt('d for drawer, g for guesser')
-        @network.role = role
-        sock.emit('playerJoin', { playerName : name, role : role })
-        if role is 'g'
+        
+        @network.name = prompt('your name')
+        @network.role = prompt('d for drawer, g for guesser')
+        
+        sock.emit('playerJoin', {
+          playerName  : @network.name
+          role        : @network.role
+        })
+        
+        if @network.role is 'g'
           sock.on('canvas', (response) => @network.receiveCanvas.call(@, response) )
           
       receiveCanvas : (response) ->
@@ -114,9 +121,14 @@ define [
     
     constructor : ->
       @registerInputs()
-      @drawingArea = new DrawingArea({ game : @ })
-      @players.jim = new Guesser({ name : 'Jim' })
-      @players.andrew = new Guesser({ name : 'Andrew' })
+      
+      uiParams =
+        game : @
+      
+      @drawingArea  = new DrawingArea(uiParams)
+      @chat         = new Chat(uiParams)
+      #@players.jim = new Guesser({ name : 'Jim' })
+      #@players.andrew = new Guesser({ name : 'Andrew' })
       
       @network.socket = io.connect('http://localhost:8000')
       #io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080')

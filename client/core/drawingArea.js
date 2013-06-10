@@ -22,8 +22,9 @@ define(function() {
     }
 
     DrawingArea.prototype.draw = function() {
-      var ac, line, _i, _len, _ref, _results;
+      var ac, line, _i, _len, _ref;
       ac = atom.context;
+      ac.clearRect(this.x, this.y, this.w, this.h);
       ac.fillStyle = '#ddd';
       ac.fillRect(this.x, this.y, this.w, this.h);
       ac.font = '12px sans-serif';
@@ -34,12 +35,13 @@ define(function() {
       ac.lineCap = 'round';
       ac.lineWidth = 4.0;
       _ref = this.drawing;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         line = _ref[_i];
-        _results.push((ac.beginPath(), ac.moveTo(line.x1, line.y1), ac.lineTo(line.x2, line.y2), ac.stroke()));
+        ac.beginPath();
+        ac.moveTo(line.x1, line.y1);
+        ac.lineTo(line.x2, line.y2);
+        ac.stroke();
       }
-      return _results;
     };
 
     DrawingArea.prototype.add = function(line) {

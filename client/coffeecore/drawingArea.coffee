@@ -11,6 +11,8 @@ define ->
     
     draw : ->
       ac = atom.context
+      ac.clearRect(@x, @y, @w, @h)
+      
       ac.fillStyle = '#ddd'
       ac.fillRect(@x,@y,@w,@h)
       ac.font = '12px sans-serif'
@@ -26,6 +28,7 @@ define ->
         ac.lineTo(line.x2, line.y2)
         ac.stroke()
       ) for line in @drawing
+      return
       
     add : (line) ->
       @drawing.push(line)
