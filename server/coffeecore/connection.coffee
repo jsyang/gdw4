@@ -1,4 +1,4 @@
-Player = require('./core/player.js')
+Player = require('./player.js')
 
 class Connection
   
@@ -15,7 +15,6 @@ class Connection
   @playerJoin   : (data) ->
     # when they connect they should be added to a pool of connected user ids
     # more or less permanent store?
-    
   
   @disconnect   : (data) ->
   @addLine      : (data) ->

@@ -7,7 +7,7 @@ do ( ->
   #canvas    = require('./core/canvas.js')
   #chat      = require('./core/chat.js')
   
-  cxn       = require('./core/connection.js')
+  cxn       = require('./connection.js')
   
   # HTTP request handler
   HTTPhandler = http.createServer(
@@ -50,6 +50,9 @@ do ( ->
       ip      : sock.handshake.address.address
       socket  : sock
     }))
+    
+    # Tell client we're successfully connected.
+    sock.emit('welcome', { hi : 1 })
   )
   
 )

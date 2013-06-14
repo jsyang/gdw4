@@ -5,7 +5,7 @@
   http = require('http');
   fs = require('fs');
   socket_io = require('socket.io');
-  cxn = require('./core/connection.js');
+  cxn = require('./connection.js');
   HTTPhandler = http.createServer(function(req, res) {
     return fs.readFile("" + __dirname + "/index.html", function(err, data) {
       if (err != null) {
@@ -30,10 +30,13 @@
   io = socket_io.listen(HTTPhandler).sockets;
   return io.on('connection', function(sock) {
     registerCxnEvents(sock);
-    return _cxns.push(new cxn({
+    _cxns.push(new cxn({
       id: sock.id,
       ip: sock.handshake.address.address,
       socket: sock
     }));
+    return sock.emit('welcome', {
+      hi: 1
+    });
   });
 })();
