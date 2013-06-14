@@ -1,5 +1,5 @@
 do ( ->
-
+  redis     = require('redis')
   http      = require('http')
   fs        = require('fs')
   socket_io = require('socket.io')
@@ -25,34 +25,17 @@ do ( ->
       )
   ).listen(8000)
   
-  # Events to listen to once someone's connected, use funcs inside the cxn module.
-  registerCxnEvents = (socket) ->
-    for e in [
-      'playerJoin'
-      'disconnect'
-      'addLine'
-      'sendMessage'
-      'guessWord'
-    ]
-      socket.on(e, cxn[e])
-    socket
-  
-  # Todo: Store connection objs in a better fashion
-  _cxns = []
-  
-  # socket.io events
-  io = socket_io.listen(HTTPhandler).sockets 
-  io.on('connection', (sock) ->
-    registerCxnEvents(sock)
-    # Todo : keep track of connections somehow. schema unclear yet
-    _cxns.push(new cxn({
-      id      : sock.id
-      ip      : sock.handshake.address.address
-      socket  : sock
-    }))
+  # Connect to Redis server
+  network =
+    rc  : redis.createClient() # we can host the redis server elsewhere but for now, run it locally
+    io  : socket_io.listen(HTTPhandler).sockets
     
-    # Tell client we're successfully connected.
-    sock.emit('welcome', { hi : 1 })
+  # Bind our network.
+  cxn.prototype.NETWORK = network
+  
+  network.rc.on('error', (err) -> console.log("Error : #{err}"))
+  network.io.on('connection', (sock) ->
+    conn = new cxn({ SOCKET : sock })
   )
   
 )

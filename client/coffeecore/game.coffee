@@ -140,46 +140,61 @@ define [
             y : pen.y
           }
       
-    
     draw : ->
       @timer.draw()
       c.draw() for c in @playerCards
       return
     
-    network:
-      socket : null
+    network :
+      connectedToServer : false
+      socket            : null
       
-      name : null
-      role : null
+      name    : null
+      role    : null
+      room    : 'lobby'
       
       whoseTurn : 'SomeOtherPlayer' # hook this up so we all know whose turn it is
       
-      sendName : ->
-        sock = @network.socket
+      registerClientEvents : ->
+        @network.socket.on('playerlist',   (response) => @network.receivePlayerList.call(@, response))
         
+      
+        @network.socket.on('canvaspage',   (response) => @network.receiveCanvasPage.call(@, response))
+        @network.socket.on('canvasline',   (response) => @network.receiveCanvasLine.call(@, response))
+        @network.socket.on('chatmsg',      (response) => @network.receiveChatMsg.call(@, response))
+        @network.socket.on('chatlog',      (response) => @network.receiveChatLog.call(@, response))
+      
+      
+      sendJoinRoom : ->
         @network.name = prompt('Your name', 'Player')
-        @network.role = prompt('d for drawer, g for guesser', 'd')
+        @network.role = 'd'
+        @network.room = prompt('Room', 'lobby')
         
-        sock.emit('playerJoin', {
-          playerName  : @network.name
-          role        : @network.role
+        @network.socket.emit('joinroom', {
+          room  : @network.room
+          name  : @network.name
         })
-        
-        #sock.on('chat', (response) => @network.receiveChat.call(@, response) )
-        
+
         switch @network.role
           when 'g'
             @mode.current = 'waitingforguess'
-            sock.on('canvas', (response) => @network.receiveCanvas.call(@, response) )
           when 'd'
-            @mode.current   = 'predrawing'
-            @predrawingArea.draw()
-          
-      receiveCanvas : (response) ->
+            @mode.current = 'predrawing'
+        @
+      
+      receivePlayerList : (response) ->
+        console.log("received player list for this room", response)
+        
+      
+      receiveCanvasPage : (response) ->
         @drawingArea.drawing = response.lines
         @drawingArea.draw()
       
-      connectedToServer : false
+      receiveChatLog : (response) ->
+        @
+        
+      receiveChatMsg : (response) ->
+        @
       
     addPlayer : (player) ->
       @playerCards.push(
@@ -222,26 +237,10 @@ define [
       @chat           = new Chat(uiParams)
       @timer          = new Timer(uiParams)
       @playerCards    = []
-      @user.cardsX    += @drawingArea.x
       
-      @addPlayer({ name : 'Jim' })
+
       
-      # testing
-      wlist = [
-        'dog'
-        'cat'
-        'rat'
-        'car'
-        'hat'
-        'bacon'
-        'tasty'
-        'nasty'
-        'yummy'
-        'long-winded'
-        'tuesday'
-      ]
-      
-      @predrawingArea.add(new Word({ value : w })) for w in wlist
+      #@predrawingArea.add(new Word({ value : w })) for w in wlist
       @predrawingArea.draw()
       
       @registerNetwork()
@@ -249,11 +248,10 @@ define [
     
     registerNetwork : ->
       @network.socket = io.connect('http://localhost:8000')
-      #io.connect('http://ec2-54-215-79-196.us-west-1.compute.amazonaws.com:8080') # EC2 server
-      
       @network.socket.on('welcome', =>
         @network.connectedToServer = true
-        @network.sendName.apply(@)
+        @network.registerClientEvents.call(@)
+        @network.sendJoinRoom.call(@)
       )
       return
     

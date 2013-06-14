@@ -139,36 +139,60 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
     };
 
     DrawThisGame.prototype.network = {
+      connectedToServer: false,
       socket: null,
       name: null,
       role: null,
+      room: 'lobby',
       whoseTurn: 'SomeOtherPlayer',
-      sendName: function() {
-        var sock,
-          _this = this;
-        sock = this.network.socket;
+      registerClientEvents: function() {
+        var _this = this;
+        this.network.socket.on('playerlist', function(response) {
+          return _this.network.receivePlayerList.call(_this, response);
+        });
+        this.network.socket.on('canvaspage', function(response) {
+          return _this.network.receiveCanvasPage.call(_this, response);
+        });
+        this.network.socket.on('canvasline', function(response) {
+          return _this.network.receiveCanvasLine.call(_this, response);
+        });
+        this.network.socket.on('chatmsg', function(response) {
+          return _this.network.receiveChatMsg.call(_this, response);
+        });
+        return this.network.socket.on('chatlog', function(response) {
+          return _this.network.receiveChatLog.call(_this, response);
+        });
+      },
+      sendJoinRoom: function() {
         this.network.name = prompt('Your name', 'Player');
-        this.network.role = prompt('d for drawer, g for guesser', 'd');
-        sock.emit('playerJoin', {
-          playerName: this.network.name,
-          role: this.network.role
+        this.network.role = 'd';
+        this.network.room = prompt('Room', 'lobby');
+        this.network.socket.emit('joinroom', {
+          room: this.network.room,
+          name: this.network.name
         });
         switch (this.network.role) {
           case 'g':
             this.mode.current = 'waitingforguess';
-            return sock.on('canvas', function(response) {
-              return _this.network.receiveCanvas.call(_this, response);
-            });
+            break;
           case 'd':
             this.mode.current = 'predrawing';
-            return this.predrawingArea.draw();
         }
+        return this;
       },
-      receiveCanvas: function(response) {
+      receivePlayerList: function(response) {
+        return console.log("received player list for this room", response);
+      },
+      receiveCanvasPage: function(response) {
         this.drawingArea.drawing = response.lines;
         return this.drawingArea.draw();
       },
-      connectedToServer: false
+      receiveChatLog: function(response) {
+        return this;
+      },
+      receiveChatMsg: function(response) {
+        return this;
+      }
     };
 
     DrawThisGame.prototype.addPlayer = function(player) {
@@ -206,7 +230,7 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
     };
 
     function DrawThisGame() {
-      var uiParams, w, wlist, _i, _len;
+      var uiParams;
       this.registerInputs();
       this.registerEvents();
       uiParams = {
@@ -217,17 +241,6 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
       this.chat = new Chat(uiParams);
       this.timer = new Timer(uiParams);
       this.playerCards = [];
-      this.user.cardsX += this.drawingArea.x;
-      this.addPlayer({
-        name: 'Jim'
-      });
-      wlist = ['dog', 'cat', 'rat', 'car', 'hat', 'bacon', 'tasty', 'nasty', 'yummy', 'long-winded', 'tuesday'];
-      for (_i = 0, _len = wlist.length; _i < _len; _i++) {
-        w = wlist[_i];
-        this.predrawingArea.add(new Word({
-          value: w
-        }));
-      }
       this.predrawingArea.draw();
       this.registerNetwork();
       return;
@@ -238,7 +251,8 @@ define(['core/playerCard', 'core/predrawingArea', 'core/drawingArea', 'core/chat
       this.network.socket = io.connect('http://localhost:8000');
       this.network.socket.on('welcome', function() {
         _this.network.connectedToServer = true;
-        return _this.network.sendName.apply(_this);
+        _this.network.registerClientEvents.call(_this);
+        return _this.network.sendJoinRoom.call(_this);
       });
     };
 
