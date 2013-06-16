@@ -24,8 +24,8 @@ define ->
       @socket.on('playerlist',    (d)=> @receive_playerlist(d))     # x
       @socket.on('playeradd',     (d)=> @receive_playeradd(d))      # 
       @socket.on('playerremove',  (d)=> @receive_playerremove(d))   #
-      @socket.on('canvaspage',    (d)=> @receive_canvaspage(d))     # 
-      @socket.on('canvasline',    (d)=> @receive_canvasline(d))     #
+      @socket.on('canvaspage',    (d)=> @receive_canvaspage(d))     # x
+      @socket.on('canvasline',    (d)=> @receive_canvasline(d))     # x
       @socket.on('chatlog',       (d)=> @receive_chatlog(d))        # x
       @socket.on('chatmsg',       (d)=> @receive_chatmsg(d))        # x
       @socket.on('words',         (d)=> @receive_words(d))          # x
@@ -46,6 +46,7 @@ define ->
       })
 
       @game.mode.init.call(@game)
+      return
       
     send_chatmsg : (msg) ->
       @socket.emit('chatmsg', {
@@ -53,7 +54,11 @@ define ->
         msg   : msg
       })
       return
-    
+      
+    send_canvasline : (line) ->
+      @socket.emit('canvasline', line)
+      return
+      
     # TR (Transmission Receive) Events # # # # # # # #
       
     receive_welcome : (data) ->
@@ -77,12 +82,16 @@ define ->
     
     receive_canvaspage : (data) ->
       if data?
-        @game.drawingArea.drawing = data
-        @game.drawingArea.draw()
+        @game.drawingArea.drawing = ( JSON.parse(line) for line in data )
+        switch @role
+          when 'o', 'g'
+            @game.drawingArea.draw()
       
     receive_canvasline : (data) ->
-      @game.drawingArea.drawing.push(data.line)
-      @game.drawingArea.drawLine(data.line)
+      switch @role
+        when 'o', 'g'
+          @game.drawingArea.add(data)
+      return
       
     receive_words : (data) ->
       switch @role

@@ -82,7 +82,7 @@ define(function() {
         room: this.room,
         name: this.name
       });
-      return this.game.mode.init.call(this.game);
+      this.game.mode.init.call(this.game);
     };
 
     Network.prototype.send_chatmsg = function(msg) {
@@ -90,6 +90,10 @@ define(function() {
         name: this.name,
         msg: msg
       });
+    };
+
+    Network.prototype.send_canvasline = function(line) {
+      this.socket.emit('canvasline', line);
     };
 
     Network.prototype.receive_welcome = function(data) {
@@ -125,15 +129,31 @@ define(function() {
     };
 
     Network.prototype.receive_canvaspage = function(data) {
+      var line;
       if (data != null) {
-        this.game.drawingArea.drawing = data;
-        return this.game.drawingArea.draw();
+        this.game.drawingArea.drawing = (function() {
+          var _i, _len, _results;
+          _results = [];
+          for (_i = 0, _len = data.length; _i < _len; _i++) {
+            line = data[_i];
+            _results.push(JSON.parse(line));
+          }
+          return _results;
+        })();
+        switch (this.role) {
+          case 'o':
+          case 'g':
+            return this.game.drawingArea.draw();
+        }
       }
     };
 
     Network.prototype.receive_canvasline = function(data) {
-      this.game.drawingArea.drawing.push(data.line);
-      return this.game.drawingArea.drawLine(data.line);
+      switch (this.role) {
+        case 'o':
+        case 'g':
+          this.game.drawingArea.add(data);
+      }
     };
 
     Network.prototype.receive_words = function(data) {

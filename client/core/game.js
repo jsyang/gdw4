@@ -9,7 +9,7 @@ define(['core/network', 'core/playerCard', 'core/predrawingArea', 'core/drawingA
     __extends(DrawThisGame, _super);
 
     DrawThisGame.prototype.user = {
-      cardsX: 0,
+      cardsX: 16,
       timeElapsed: 0,
       lastMouse: {
         x: 0,
@@ -186,7 +186,6 @@ define(['core/network', 'core/playerCard', 'core/predrawingArea', 'core/drawingA
       this.network = new Network($$.extend(uiParams, {
         socket: io.connect('http://localhost:8000')
       }));
-      this.predrawingArea.draw();
       return;
     }
 
@@ -197,13 +196,11 @@ define(['core/network', 'core/playerCard', 'core/predrawingArea', 'core/drawingA
         _this.chat.resize().draw();
         _this.timer.resize().draw();
       };
-      return this;
     };
 
     DrawThisGame.prototype.registerInputs = function() {
       atom.input.bind(atom.button.LEFT, 'mouseleft');
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger');
-      return this;
     };
 
     DrawThisGame.prototype.timeLeft = function() {
@@ -215,13 +212,7 @@ define(['core/network', 'core/playerCard', 'core/predrawingArea', 'core/drawingA
     };
 
     DrawThisGame.prototype.draw = function() {
-      var c, _i, _len, _ref;
-      this.timer.draw();
-      _ref = this.playerCards;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        c = _ref[_i];
-        c.draw();
-      }
+      return this.timer.draw();
     };
 
     return DrawThisGame;

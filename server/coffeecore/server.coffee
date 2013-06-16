@@ -26,11 +26,11 @@ do ( ->
             res.end(data)
       )
   ).listen(8000)
-  
+
   # Connect to Redis server
   network =
     rc  : redis.createClient() # we can host the redis server elsewhere but for now, run it locally
-    io  : socket_io.listen(HTTPhandler).sockets
+    io  : socket_io.listen(HTTPhandler).set('log level', 1).sockets
     
   # Bind our network.
   cxn.prototype.NETWORK = network

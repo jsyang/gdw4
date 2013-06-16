@@ -19,7 +19,7 @@ define [
     # network
     
     user :
-      cardsX : 0 # current position of the next player card
+      cardsX : 16 # current position of the next player card
       timeElapsed : 0
       lastMouse : 
         x : 0
@@ -189,9 +189,6 @@ define [
       @timer          = new Timer(uiParams)
       @playerCards    = []
       @network        = new Network($$.extend(uiParams, { socket : io.connect('http://localhost:8000') }))
-      
-      #@predrawingArea.add(new Word({ value : w })) for w in wlist
-      @predrawingArea.draw()
       return
     
     registerEvents : ->
@@ -201,12 +198,12 @@ define [
         @chat.resize().draw()
         @timer.resize().draw()
         return 
-      @
+      return
     
     registerInputs : ->
       atom.input.bind(atom.button.LEFT, 'mouseleft')
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger')
-      @
+      return
     
     timeLeft : ->
       # todo : calculate the time left : difference in round start time (received from server) and round time limit
@@ -218,5 +215,5 @@ define [
     # Render loop
     draw : ->
       @timer.draw()
-      c.draw() for c in @playerCards
-      return
+      #c.draw() for c in @playerCards
+      #return

@@ -29,6 +29,9 @@ Connection = (function() {
     this.SOCKET.on('chatmsg', function(d) {
       return _this.receive_chatmsg(d);
     });
+    this.SOCKET.on('canvasline', function(d) {
+      return _this.receive_canvasline(d);
+    });
   };
 
   Connection.prototype.send_welcome = function() {
@@ -44,6 +47,10 @@ Connection = (function() {
 
   Connection.prototype.db_send_playerlist = function() {
     return this.NETWORK.rc.hset("room:" + this.SOCKET._.room, 'playerlist', JSON.stringify(this.SOCKET._.JSON.playerlist));
+  };
+
+  Connection.prototype.db_send_canvasline = function(line) {
+    return this.NETWORK.rc.lpush("room:" + this.SOCKET._.room + ":canvas", JSON.stringify(line));
   };
 
   Connection.prototype.db_create_room = function() {
@@ -72,7 +79,18 @@ Connection = (function() {
     return this.NETWORK.io.emit('chatmsg', data);
   };
 
-  Connection.prototype.db_receive_room = function(err, data, cb) {
+  Connection.prototype.db_receive_canvaslength = function(err, data) {
+    var _this = this;
+    return this.NETWORK.rc.lrange("room:" + this.SOCKET._.room + ":canvas", 0, data, function(e, d) {
+      return _this.db_receive_canvas(e, d);
+    });
+  };
+
+  Connection.prototype.db_receive_canvas = function(err, data) {
+    return this.SOCKET.emit('canvaspage', data);
+  };
+
+  Connection.prototype.db_receive_room = function(err, data) {
     var j, k, v, _ref;
     if (data != null) {
       this.SOCKET._.JSON = data;
@@ -81,18 +99,15 @@ Connection = (function() {
         v = _ref[k];
         this.SOCKET._.JSON[k] = JSON.parse(v);
       }
-      console.log(this.SOCKET._.JSON);
     } else {
       this.SOCKET._.JSON = {
         playerlist: [],
-        chat: [],
-        canvas: []
+        chat: []
       };
     }
     j = this.SOCKET._.JSON;
     this.SOCKET.emit('playerlist', j.playerlist);
     this.SOCKET.emit('chatlog', j.chat);
-    this.SOCKET.emit('canvaspage', j.canvas);
     this.SOCKET.emit('words', ['cat', 'rat', 'dog', 'hog', 'fog', 'smog', 'log', 'lock', 'clock', 'block']);
     if (!(data != null)) {
       this.db_create_room();
@@ -107,6 +122,9 @@ Connection = (function() {
     this.NETWORK.rc.hgetall("room:" + data.room, function(e, d) {
       return _this.db_receive_room(e, d);
     });
+    this.NETWORK.rc.llen("room:" + data.room + ":canvas", function(e, d) {
+      return _this.db_receive_canvaslength(e, d);
+    });
   };
 
   Connection.prototype.receive_leaveroom = function(data) {
@@ -116,7 +134,12 @@ Connection = (function() {
     this.db_send_playerlist();
   };
 
-  Connection.prototype.receive_canvasline = function(data) {};
+  Connection.prototype.receive_canvasline = function(data) {
+    var j;
+    j = this.SOCKET._.JSON;
+    this.db_send_canvasline(data);
+    this.NETWORK.io.emit('canvasline', data);
+  };
 
   return Connection;
 

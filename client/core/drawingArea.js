@@ -68,7 +68,7 @@ define(function() {
     DrawingArea.prototype.add = function(line) {
       this.drawing.push(line);
       this.drawLine(line);
-      return this.game.network.socket.emit('addLine', line);
+      return this.game.network.send_canvasline(line);
     };
 
     DrawingArea.prototype.resize = function() {

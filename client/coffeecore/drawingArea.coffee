@@ -53,7 +53,7 @@ define ->
     add : (line) ->
       @drawing.push(line)
       @drawLine(line)
-      @game.network.socket.emit('addLine', line)
+      @game.network.send_canvasline(line)
       
     resize : ->
       @x = @margin

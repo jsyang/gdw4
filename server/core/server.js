@@ -20,7 +20,7 @@
   }).listen(8000);
   network = {
     rc: redis.createClient(),
-    io: socket_io.listen(HTTPhandler).sockets
+    io: socket_io.listen(HTTPhandler).set('log level', 1).sockets
   };
   cxn.prototype.NETWORK = network;
   network.rc.on('error', function(err) {
