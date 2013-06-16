@@ -31,14 +31,13 @@ do ( ->
   network =
     rc  : redis.createClient() # we can host the redis server elsewhere but for now, run it locally
     io  : socket_io.listen(HTTPhandler).sockets
-
     
   # Bind our network.
   cxn.prototype.NETWORK = network
   
   network.rc.on('error', (err) -> console.log("Error : #{err}"))
   network.io.on('connection', (sock) ->
-    conn = new cxn({ SOCKET : sock })
+    new cxn({ SOCKET : sock })
   )
   
 )

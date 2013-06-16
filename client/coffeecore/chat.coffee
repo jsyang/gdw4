@@ -12,10 +12,8 @@ define ->
       switch e.which
         when 13 # ENTER
           # todo: actually hook this up to network
-          @add({
-            name  : @game.network.name
-            msg   : e.target.value
-          })
+          #@add(chatmsg)
+          @game.network.send_chatmsg(e.target.value)
           e.target.value = ''
           #e.target.blur()
         
@@ -48,8 +46,9 @@ define ->
       @resize().createChatInput().draw()
       
     add : (msgObj) ->
-      if @messages.length+1 > @MAXLINES
-        @messages.shift()
+      msgExcess = @messages.length - @MAXLINES
+      if msgExcess > 0
+        @messages = @messages[msgExcess..]
       @messages.push(msgObj)
       @draw()
   

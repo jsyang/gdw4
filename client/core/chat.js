@@ -17,10 +17,7 @@ define(function() {
     Chat.prototype.onKeyPress = function(e) {
       switch (e.which) {
         case 13:
-          this.add({
-            name: this.game.network.name,
-            msg: e.target.value
-          });
+          this.game.network.send_chatmsg(e.target.value);
           e.target.value = '';
       }
     };
@@ -65,8 +62,10 @@ define(function() {
     }
 
     Chat.prototype.add = function(msgObj) {
-      if (this.messages.length + 1 > this.MAXLINES) {
-        this.messages.shift();
+      var msgExcess;
+      msgExcess = this.messages.length - this.MAXLINES;
+      if (msgExcess > 0) {
+        this.messages = this.messages.slice(msgExcess);
       }
       this.messages.push(msgObj);
       return this.draw();

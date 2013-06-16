@@ -33,20 +33,42 @@ define(function() {
         throw 'socket was not set!';
       }
       this.registerClientEvents();
+      this.send_hello();
     }
 
     Network.prototype.registerClientEvents = function() {
-      var e, _i, _len, _ref, _results,
-        _this = this;
-      _ref = ['playerlist', 'canvaspage', 'canvasline', 'chatmsg', 'chatlog'];
-      _results = [];
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        e = _ref[_i];
-        _results.push(this.socket.on(e, function(r) {
-          return _this["receive_" + e](r);
-        }));
-      }
-      return _results;
+      var _this = this;
+      this.socket.on('welcome', function(d) {
+        return _this.receive_welcome(d);
+      });
+      this.socket.on('playerlist', function(d) {
+        return _this.receive_playerlist(d);
+      });
+      this.socket.on('playeradd', function(d) {
+        return _this.receive_playeradd(d);
+      });
+      this.socket.on('playerremove', function(d) {
+        return _this.receive_playerremove(d);
+      });
+      this.socket.on('canvaspage', function(d) {
+        return _this.receive_canvaspage(d);
+      });
+      this.socket.on('canvasline', function(d) {
+        return _this.receive_canvasline(d);
+      });
+      this.socket.on('chatlog', function(d) {
+        return _this.receive_chatlog(d);
+      });
+      this.socket.on('chatmsg', function(d) {
+        return _this.receive_chatmsg(d);
+      });
+      this.socket.on('words', function(d) {
+        return _this.receive_words(d);
+      });
+    };
+
+    Network.prototype.send_hello = function() {
+      return this.socket.emit('hello');
     };
 
     Network.prototype.send_joinroom = function() {
@@ -64,7 +86,7 @@ define(function() {
     };
 
     Network.prototype.send_chatmsg = function(msg) {
-      return this.socket.emit('chatmsg', {
+      this.socket.emit('chatmsg', {
         name: this.name,
         msg: msg
       });
@@ -78,42 +100,49 @@ define(function() {
     };
 
     Network.prototype.receive_playerlist = function(data) {
-      var n, _i, _len, _ref;
-      _ref = data.split(' ');
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        n = _ref[_i];
-        this.game.addPlayer({
-          name: n
-        });
+      var name, _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = data.length; _i < _len; _i++) {
+        name = data[_i];
+        _results.push(this.game.addPlayer({
+          name: name
+        }));
       }
+      return _results;
     };
 
     Network.prototype.receive_chatlog = function(data) {
-      var messages;
-      messages = JSON.parse(data);
-      if (messages != null) {
-        this.game.chat.messages = messages;
+      if (data != null) {
+        this.game.chat.messages = data;
+        return this.game.chat.draw();
       }
-      return this.game.chat.draw();
     };
 
     Network.prototype.receive_chatmsg = function(data) {
-      var message;
-      message = JSON.parse(data);
-      if (message != null) {
-        this.game.chat.messages.push = message;
+      if (data != null) {
+        return this.game.chat.add(data);
       }
-      return this.game.chat.draw();
     };
 
     Network.prototype.receive_canvaspage = function(data) {
-      this.game.drawingArea.drawing = data.lines;
-      return this.game.drawingArea.draw();
+      if (data != null) {
+        this.game.drawingArea.drawing = data;
+        return this.game.drawingArea.draw();
+      }
     };
 
     Network.prototype.receive_canvasline = function(data) {
       this.game.drawingArea.drawing.push(data.line);
       return this.game.drawingArea.drawLine(data.line);
+    };
+
+    Network.prototype.receive_words = function(data) {
+      switch (this.role) {
+        case 'g':
+          break;
+        case 'd':
+          return this.game.predrawingArea.add(data);
+      }
     };
 
     return Network;

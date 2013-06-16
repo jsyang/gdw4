@@ -16,67 +16,107 @@ Connection = (function() {
       this[k] = v;
     }
     this.registerServerEvents();
-    this.send_welcome();
   }
 
   Connection.prototype.registerServerEvents = function() {
-    var e, _i, _len, _ref, _results,
-      _this = this;
-    _ref = ['joinroom', 'chatmsg'];
-    _results = [];
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      e = _ref[_i];
-      _results.push(this.SOCKET.on(e, function(r) {
-        return _this["receive_" + e](r);
-      }));
-    }
-    return _results;
+    var _this = this;
+    this.SOCKET.on('hello', function(d) {
+      return _this.receive_hello(d);
+    });
+    this.SOCKET.on('joinroom', function(d) {
+      return _this.receive_joinroom(d);
+    });
+    this.SOCKET.on('chatmsg', function(d) {
+      return _this.receive_chatmsg(d);
+    });
   };
 
   Connection.prototype.send_welcome = function() {
     return this.SOCKET.emit('welcome', {
-      role: 'g',
+      role: 'd',
       id: 12
     });
   };
 
-  Connection.prototype.receive_chatmsg = function(data) {
-    if (((data != null ? data.name : void 0) != null) && ((data != null ? data.msg : void 0) != null)) {
-      return this.NETWORK.rc.set("room:" + this.SOCKET._.room + " chatlog", newPlayerList);
+  Connection.prototype.db_send_chat = function() {
+    return this.NETWORK.rc.hset("room:" + this.SOCKET._.room, 'chat', JSON.stringify(this.SOCKET._.JSON.chat));
+  };
+
+  Connection.prototype.db_send_playerlist = function() {
+    return this.NETWORK.rc.hset("room:" + this.SOCKET._.room, 'playerlist', JSON.stringify(this.SOCKET._.JSON.playerlist));
+  };
+
+  Connection.prototype.db_create_room = function() {
+    var j, k, roomDict, v;
+    j = this.SOCKET._.JSON;
+    roomDict = {};
+    for (k in j) {
+      v = j[k];
+      roomDict[k] = JSON.stringify(v);
     }
+    return this.NETWORK.rc.hmset("room:" + this.SOCKET._.room, roomDict);
+  };
+
+  Connection.prototype.receive_hello = function() {
+    return this.send_welcome();
+  };
+
+  Connection.prototype.receive_chatmsg = function(data) {
+    var j;
+    j = this.SOCKET._.JSON;
+    j.chat.push(data);
+    if (j.chat.length > 20) {
+      j.chat = j.chat.slice(j.chat.length - 20);
+    }
+    this.db_send_chat();
+    return this.NETWORK.io.emit('chatmsg', data);
+  };
+
+  Connection.prototype.db_receive_room = function(err, data, cb) {
+    var j, k, v, _ref;
+    if (data != null) {
+      this.SOCKET._.JSON = data;
+      _ref = this.SOCKET._.JSON;
+      for (k in _ref) {
+        v = _ref[k];
+        this.SOCKET._.JSON[k] = JSON.parse(v);
+      }
+      console.log(this.SOCKET._.JSON);
+    } else {
+      this.SOCKET._.JSON = {
+        playerlist: [],
+        chat: [],
+        canvas: []
+      };
+    }
+    j = this.SOCKET._.JSON;
+    this.SOCKET.emit('playerlist', j.playerlist);
+    this.SOCKET.emit('chatlog', j.chat);
+    this.SOCKET.emit('canvaspage', j.canvas);
+    this.SOCKET.emit('words', ['cat', 'rat', 'dog', 'hog', 'fog', 'smog', 'log', 'lock', 'clock', 'block']);
+    if (!(data != null)) {
+      this.db_create_room();
+    }
+    j.playerlist.push(this.SOCKET._.name);
+    this.db_send_playerlist();
   };
 
   Connection.prototype.receive_joinroom = function(data) {
     var _this = this;
-    this.SOCKET._ = $.extend({}, data);
-    this.NETWORK.rc.get("room:" + data.room + " canvaspage", function(e, d) {
-      return _this.SOCKET.emit('canvaspage', d);
-    });
-    this.NETWORK.rc.get("room:" + data.room + " chatlog", function(e, d) {
-      return _this.SOCKET.emit('chatlog', d);
-    });
-    this.NETWORK.rc.get("room:" + data.room + " playerlist", function(e, d) {
-      var newPlayerList;
-      newPlayerList = d != null ? "" + d + " " + data.name : "" + data.name;
-      _this.SOCKET.emit('playerlist', newPlayerList);
-      return _this.NETWORK.rc.set("room " + data.room + " playerlist", newPlayerList);
+    this.SOCKET._ = data;
+    this.NETWORK.rc.hgetall("room:" + data.room, function(e, d) {
+      return _this.db_receive_room(e, d);
     });
   };
 
   Connection.prototype.receive_leaveroom = function(data) {
-    var _this = this;
-    this.NETWORK.rc.get("room " + this.SOCKET._.room + " playerlist", function(e, d) {
-      var newPlayerList;
-      if (!!(d != null)) {
-        newPlayerList = d.replace(" " + _this.SOCKET._.name, '').replace("" + _this.SOCKET._.name, '');
-      }
-      return _this.NETWORK.rc.set("room " + _this.SOCKET._.room + " playerlist", newPlayerList);
-    });
+    var j;
+    j = this.SOCKET._.JSON;
+    j.playerlist = j.playerlist.splice(j.playerlist.indexOf(this.SOCKET._.name), 1);
+    this.db_send_playerlist();
   };
 
   Connection.prototype.receive_canvasline = function(data) {};
-
-  Connection.prototype.receive_chatmsg = function(data) {};
 
   return Connection;
 

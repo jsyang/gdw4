@@ -16,19 +16,24 @@ define ->
       @[k] = v for k,v of params
       throw 'game was not set!'   unless @game?
       throw 'socket was not set!' unless @socket?
-      # Welcome event received when socket.io connection is initiated
       @registerClientEvents()
+      @send_hello()
     
     registerClientEvents : ->
-      @socket.on(e, (r) => @["receive_#{e}"](r)) for e in [
-        'playerlist'
-        'canvaspage'
-        'canvasline'
-        'chatmsg'
-        'chatlog'
-      ]
+      @socket.on('welcome',       (d)=> @receive_welcome(d))        # x
+      @socket.on('playerlist',    (d)=> @receive_playerlist(d))     # x
+      @socket.on('playeradd',     (d)=> @receive_playeradd(d))      # 
+      @socket.on('playerremove',  (d)=> @receive_playerremove(d))   #
+      @socket.on('canvaspage',    (d)=> @receive_canvaspage(d))     # 
+      @socket.on('canvasline',    (d)=> @receive_canvasline(d))     #
+      @socket.on('chatlog',       (d)=> @receive_chatlog(d))        # x
+      @socket.on('chatmsg',       (d)=> @receive_chatmsg(d))        # x
+      @socket.on('words',         (d)=> @receive_words(d))          # x
+      return
     
     # TX (Transmission Send) Events # # # # # # # #
+    
+    send_hello : -> @socket.emit('hello')
     
     send_joinroom : ->
       # Keep room and name if resuming a session
@@ -47,34 +52,41 @@ define ->
         name  : @name
         msg   : msg
       })
+      return
     
     # TR (Transmission Receive) Events # # # # # # # #
       
     receive_welcome : (data) ->
       @id         = data?.id
       @role       = data?.role
+      
       @connected  = true
       @send_joinroom()
     
     receive_playerlist : (data) ->
-      @game.addPlayer({ name : n }) for n in data.split(' ')
-      return
+      @game.addPlayer({ name }) for name in data
     
     receive_chatlog : (data) ->
-      messages = JSON.parse(data)
-      @game.chat.messages = messages if messages?
-      @game.chat.draw()
+      if data?
+        @game.chat.messages = data
+        @game.chat.draw()
     
     receive_chatmsg : (data) ->
-      message = JSON.parse(data)
-      @game.chat.messages.push = message if message?
-      @game.chat.draw()
+      if data?
+        @game.chat.add(data)
     
     receive_canvaspage : (data) ->
-      # todo: catch errors
-      @game.drawingArea.drawing = data.lines
-      @game.drawingArea.draw()
+      if data?
+        @game.drawingArea.drawing = data
+        @game.drawingArea.draw()
       
     receive_canvasline : (data) ->
       @game.drawingArea.drawing.push(data.line)
       @game.drawingArea.drawLine(data.line)
+      
+    receive_words : (data) ->
+      switch @role
+        when 'g'
+          break
+        when 'd'
+          @game.predrawingArea.add(data)

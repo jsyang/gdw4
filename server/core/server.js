@@ -27,8 +27,7 @@
     return console.log("Error : " + err);
   });
   return network.io.on('connection', function(sock) {
-    var conn;
-    return conn = new cxn({
+    return new cxn({
       SOCKET: sock
     });
   });

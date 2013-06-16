@@ -1,4 +1,4 @@
-define ->
+define [ 'core/word' ], (Word) ->
   class PredrawingArea
     x         : 0
     y         : 0
@@ -33,11 +33,10 @@ define ->
       if !@game? then throw 'game was not set!'
       @resize()
     
-    add : (word) ->
-      if @words.length < 10
-        word.index = @words.length
-        @words.push(word)
-        @arrangeWords()
+    add : (words) ->
+      @words = ( new Word({ value }) for value in words[0...10])
+      @arrangeWords()
+      @draw()
     
     setTextStyle : ->
       ac = atom.context
@@ -50,22 +49,28 @@ define ->
       wordW = @words[0].w
       wordH = @words[0].h
       
+      i = 0
+      # Column 1
       x = @x + (((@w>>1) - wordW)>>1)
       y = @y + 2*@margin + @FONTSIZE 
       (
         w.x = x
         w.y = y
+        w.index = i
         y += wordH + @margin
+        i++
       ) for w in @words[0...5]
       
+      # Column 2
       x = @x + (@w>>1) + (((@w>>1) - wordW)>>1)
       y = @y + 2*@margin + @FONTSIZE 
       (
         w.x = x
         w.y = y
+        w.index = i
         y += wordH + @margin
+        i++
       ) for w in @words[5...10]
-      
       @
     
     clear : -> atom.context.clearRect(@x, @y, @w, @h)
