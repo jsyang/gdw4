@@ -5,62 +5,78 @@ $ = require('./$.js');
 
 Connection = (function() {
 
+  Connection.prototype.NETWORK = null;
+
+  Connection.prototype.SOCKET = null;
+
   function Connection(params) {
     var k, v;
     for (k in params) {
       v = params[k];
       this[k] = v;
     }
-    this.registerEvents();
-    this.SOCKET.emit('welcome');
-    this;
-
+    this.registerServerEvents();
+    this.send_welcome();
   }
 
-  Connection.prototype.NETWORK = null;
+  Connection.prototype.registerServerEvents = function() {
+    var e, _i, _len, _ref, _results,
+      _this = this;
+    _ref = ['joinroom', 'chatmsg'];
+    _results = [];
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      e = _ref[_i];
+      _results.push(this.SOCKET.on(e, function(r) {
+        return _this["receive_" + e](r);
+      }));
+    }
+    return _results;
+  };
 
-  Connection.prototype.SOCKET = null;
-
-  Connection.prototype.registerEvents = function() {
-    var _this = this;
-    this.SOCKET.on('joinroom', function(d) {
-      return _this.event.joinroom.call(_this, d);
+  Connection.prototype.send_welcome = function() {
+    return this.SOCKET.emit('welcome', {
+      role: 'g',
+      id: 12
     });
-    return this;
   };
 
-  Connection.prototype.event = {
-    joinroom: function(data) {
-      var _this = this;
-      this.SOCKET._ = $.extend({}, data);
-      this.NETWORK.rc.get("room " + data.room + " canvaspage", function(e, d) {
-        return _this.SOCKET.emit('canvaspage', d);
-      });
-      this.NETWORK.rc.get("room " + data.room + " chatlog", function(e, d) {
-        return _this.SOCKET.emit('chatlog', d);
-      });
-      this.NETWORK.rc.get("room " + data.room + " playerlist", function(e, d) {
-        var newPlayerList;
-        newPlayerList = d != null ? "" + d + " " + data.name : "" + data.name;
-        _this.SOCKET.emit('playerlist', newPlayerList);
-        return _this.NETWORK.rc.set("room " + data.room + " playerlist", newPlayerList);
-      });
-    },
-    leaveroom: function(data) {
-      var _this = this;
-      this.NETWORK.rc.get("room " + this.SOCKET._.room + " playerlist", function(e, d) {
-        var newPlayerList;
-        if (!!(d != null)) {
-          newPlayerList = d.replace(" " + _this.SOCKET._.name, '').replace("" + _this.SOCKET._.name, '');
-        }
-        return _this.NETWORK.rc.set("room " + _this.SOCKET._.room + " playerlist", newPlayerList);
-      });
-    },
-    canvasline: function(data) {},
-    canvaspage: function(data) {},
-    chatlog: function(data) {},
-    chatmsg: function(data) {}
+  Connection.prototype.receive_chatmsg = function(data) {
+    if (((data != null ? data.name : void 0) != null) && ((data != null ? data.msg : void 0) != null)) {
+      return this.NETWORK.rc.set("room:" + this.SOCKET._.room + " chatlog", newPlayerList);
+    }
   };
+
+  Connection.prototype.receive_joinroom = function(data) {
+    var _this = this;
+    this.SOCKET._ = $.extend({}, data);
+    this.NETWORK.rc.get("room:" + data.room + " canvaspage", function(e, d) {
+      return _this.SOCKET.emit('canvaspage', d);
+    });
+    this.NETWORK.rc.get("room:" + data.room + " chatlog", function(e, d) {
+      return _this.SOCKET.emit('chatlog', d);
+    });
+    this.NETWORK.rc.get("room:" + data.room + " playerlist", function(e, d) {
+      var newPlayerList;
+      newPlayerList = d != null ? "" + d + " " + data.name : "" + data.name;
+      _this.SOCKET.emit('playerlist', newPlayerList);
+      return _this.NETWORK.rc.set("room " + data.room + " playerlist", newPlayerList);
+    });
+  };
+
+  Connection.prototype.receive_leaveroom = function(data) {
+    var _this = this;
+    this.NETWORK.rc.get("room " + this.SOCKET._.room + " playerlist", function(e, d) {
+      var newPlayerList;
+      if (!!(d != null)) {
+        newPlayerList = d.replace(" " + _this.SOCKET._.name, '').replace("" + _this.SOCKET._.name, '');
+      }
+      return _this.NETWORK.rc.set("room " + _this.SOCKET._.room + " playerlist", newPlayerList);
+    });
+  };
+
+  Connection.prototype.receive_canvasline = function(data) {};
+
+  Connection.prototype.receive_chatmsg = function(data) {};
 
   return Connection;
 

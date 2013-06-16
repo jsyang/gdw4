@@ -3,11 +3,13 @@ do ( ->
   http      = require('http')
   fs        = require('fs')
   socket_io = require('socket.io')
+  cxn       = require('./connection.js')
+  
+  # Doesn't seem like we'll need these extra classes if we manage
+  # the data through the datastore in a clever manner.
   #player    = require('./core/player.js')
   #canvas    = require('./core/canvas.js')
   #chat      = require('./core/chat.js')
-  
-  cxn       = require('./connection.js')
   
   # HTTP request handler
   HTTPhandler = http.createServer(
@@ -29,6 +31,7 @@ do ( ->
   network =
     rc  : redis.createClient() # we can host the redis server elsewhere but for now, run it locally
     io  : socket_io.listen(HTTPhandler).sockets
+
     
   # Bind our network.
   cxn.prototype.NETWORK = network

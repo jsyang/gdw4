@@ -34,8 +34,8 @@ define ->
       if @game.network.role is 'd'
         ac.fillText("Draw '#{@chosen.join(' ')}' here! ",@x,@y)
         
-      # instead of showing it here, indicate it in the player cards?
-      #else
+      # TODO: instead of showing who is drawing here
+      #       indicate it in the player cards?
       #  ac.fillText("#{@game.network.whoseTurn} is drawing.",@x,@y)
       
       @drawLine(line) for line in @drawing

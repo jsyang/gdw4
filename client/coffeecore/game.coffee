@@ -1,11 +1,12 @@
 define [
+  'core/network'
   'core/playerCard'
   'core/predrawingArea'
   'core/drawingArea'
   'core/chat'
   'core/timer'
-  'core/word'
-], (PlayerCard, PredrawingArea, DrawingArea, Chat, Timer, Word) ->
+  'core/word'  
+], (Network, PlayerCard, PredrawingArea, DrawingArea, Chat, Timer, Word) ->
     
   class DrawThisGame extends atom.Game
   
@@ -15,6 +16,7 @@ define [
     # timer
     # playerCards
     # buttons
+    # network
     
     user :
       cardsX : 0 # current position of the next player card
@@ -50,8 +52,15 @@ define [
         y
       }
     
-      
+    # Game mode (UI logic)
     mode :
+      init : ->
+        switch @network.role
+          when 'g'
+            @mode.current = 'waitingforguess'
+          when 'd'
+            @mode.current = 'predrawing'
+        return
     
       current : 'predrawing'
       
@@ -115,8 +124,7 @@ define [
               x : pen.x
               y : pen.y
             }
-          
-          
+
         else
           pen = @clampMouseInsideDrawingArea()
           
@@ -139,62 +147,6 @@ define [
             x : pen.x
             y : pen.y
           }
-      
-    draw : ->
-      @timer.draw()
-      c.draw() for c in @playerCards
-      return
-    
-    network :
-      connectedToServer : false
-      socket            : null
-      
-      name    : null
-      role    : null
-      room    : 'lobby'
-      
-      whoseTurn : 'SomeOtherPlayer' # hook this up so we all know whose turn it is
-      
-      registerClientEvents : ->
-        @network.socket.on('playerlist',   (response) => @network.receivePlayerList.call(@, response))
-        
-      
-        @network.socket.on('canvaspage',   (response) => @network.receiveCanvasPage.call(@, response))
-        @network.socket.on('canvasline',   (response) => @network.receiveCanvasLine.call(@, response))
-        @network.socket.on('chatmsg',      (response) => @network.receiveChatMsg.call(@, response))
-        @network.socket.on('chatlog',      (response) => @network.receiveChatLog.call(@, response))
-      
-      
-      sendJoinRoom : ->
-        @network.name = prompt('Your name', 'Player')
-        @network.role = 'd'
-        @network.room = prompt('Room', 'lobby')
-        
-        @network.socket.emit('joinroom', {
-          room  : @network.room
-          name  : @network.name
-        })
-
-        switch @network.role
-          when 'g'
-            @mode.current = 'waitingforguess'
-          when 'd'
-            @mode.current = 'predrawing'
-        @
-      
-      receivePlayerList : (response) ->
-        console.log("received player list for this room", response)
-        
-      
-      receiveCanvasPage : (response) ->
-        @drawingArea.drawing = response.lines
-        @drawingArea.draw()
-      
-      receiveChatLog : (response) ->
-        @
-        
-      receiveChatMsg : (response) ->
-        @
       
     addPlayer : (player) ->
       @playerCards.push(
@@ -229,30 +181,17 @@ define [
       @registerInputs()
       @registerEvents()
       
-      uiParams =
-        game : @
+      uiParams        = { game : @ }
       
       @predrawingArea = new PredrawingArea(uiParams)
       @drawingArea    = new DrawingArea(uiParams)
       @chat           = new Chat(uiParams)
       @timer          = new Timer(uiParams)
       @playerCards    = []
-      
-
+      @network        = new Network($$.extend(uiParams, { socket : io.connect('http://localhost:8000') }))
       
       #@predrawingArea.add(new Word({ value : w })) for w in wlist
       @predrawingArea.draw()
-      
-      @registerNetwork()
-      return
-    
-    registerNetwork : ->
-      @network.socket = io.connect('http://localhost:8000')
-      @network.socket.on('welcome', =>
-        @network.connectedToServer = true
-        @network.registerClientEvents.call(@)
-        @network.sendJoinRoom.call(@)
-      )
       return
     
     registerEvents : ->
@@ -262,13 +201,22 @@ define [
         @chat.resize().draw()
         @timer.resize().draw()
         return 
+      @
     
     registerInputs : ->
       atom.input.bind(atom.button.LEFT, 'mouseleft')
       atom.input.bind(atom.touch.TOUCHING, 'touchfinger')
+      @
     
     timeLeft : ->
       # todo : calculate the time left : difference in round start time (received from server) and round time limit
       79310 # $$.R(200, 79310)
     
+    # Game loop
     update : (dt) -> @mode[@mode.current].apply(@, [dt])
+    
+    # Render loop
+    draw : ->
+      @timer.draw()
+      c.draw() for c in @playerCards
+      return
