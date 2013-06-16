@@ -32,6 +32,12 @@ Connection = (function() {
     this.SOCKET.on('canvasline', function(d) {
       return _this.receive_canvasline(d);
     });
+    this.SOCKET.on('chooseword', function(d) {
+      return _this.receive_chooseword(d);
+    });
+    this.SOCKET.on('guessword', function(d) {
+      return _this.receive_guessword(d);
+    });
   };
 
   Connection.prototype.send_welcome = function() {
@@ -40,6 +46,8 @@ Connection = (function() {
       id: 12
     });
   };
+
+  Connection.prototype.send_words = function() {};
 
   Connection.prototype.db_send_chat = function() {
     return this.NETWORK.rc.hset("room:" + this.SOCKET._.room, 'chat', JSON.stringify(this.SOCKET._.JSON.chat));
@@ -106,13 +114,13 @@ Connection = (function() {
       };
     }
     j = this.SOCKET._.JSON;
+    j.playerlist.push(this.SOCKET._.name);
     this.SOCKET.emit('playerlist', j.playerlist);
     this.SOCKET.emit('chatlog', j.chat);
     this.SOCKET.emit('words', ['cat', 'rat', 'dog', 'hog', 'fog', 'smog', 'log', 'lock', 'clock', 'block']);
     if (!(data != null)) {
       this.db_create_room();
     }
-    j.playerlist.push(this.SOCKET._.name);
     this.db_send_playerlist();
   };
 
@@ -140,6 +148,10 @@ Connection = (function() {
     this.db_send_canvasline(data);
     this.NETWORK.io.emit('canvasline', data);
   };
+
+  Connection.prototype.receive_chooseword = function(data) {};
+
+  Connection.prototype.receive_guessword = function(data) {};
 
   return Connection;
 
