@@ -65,19 +65,20 @@ define(function() {
       this.socket.on('words', function(d) {
         return _this.receive_words(d);
       });
+      this.socket.on('drawwords', function(d) {
+        return _this.receive_draw_candidate_words(d);
+      });
     };
 
     Network.prototype.send_hello = function() {
-      return this.socket.emit('hello');
+      this.name = prompt('Your name', "guest" + ($$.R(1000, 9999)));
+      return this.socket.emit('hello', {
+        name: this.name
+      });
     };
 
     Network.prototype.send_joinroom = function() {
-      if (this.name == null) {
-        this.name = prompt('Your name', 'Player');
-      }
-      if (this.room == null) {
-        this.room = prompt('Room', 'lobby');
-      }
+      this.room = prompt('Room', 'lobby');
       this.socket.emit('joinroom', {
         room: this.room,
         name: this.name
@@ -157,11 +158,14 @@ define(function() {
     };
 
     Network.prototype.receive_words = function(data) {
-      switch (this.role) {
-        case 'g':
-          break;
-        case 'd':
-          return this.game.predrawingArea.add(data);
+      if (this.role === 'g') {
+
+      }
+    };
+
+    Network.prototype.receive_draw_candidate_words = function(data) {
+      if (this.role === 'd') {
+        return this.game.predrawingArea.add(data);
       }
     };
 

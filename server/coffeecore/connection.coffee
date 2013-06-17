@@ -16,6 +16,7 @@ class Connection
     @SOCKET.on('chooseword',(d) => @receive_chooseword(d))
     @SOCKET.on('guessword', (d) => @receive_guessword(d))
     
+    @SOCKET.on('disconnect', => @db_send_leaveroom)
     return
   
   # TX (Transmission Send) Events
@@ -26,24 +27,54 @@ class Connection
       role  : 'd'
       id    : 12
     })
+    
+    @send_draw_candidate_words()
   
-  send_words : ->
+  send_draw_candidate_words : (words) ->
     # send the updated (already chosen word list)
-    # todo
+    words = (@db_choose_word() for i in [0...10])
+    @SOCKET.emit('drawwords', words)
   
   db_send_chat        : -> @NETWORK.rc.hset("room:#{@SOCKET._.room}",'chat', JSON.stringify(@SOCKET._.JSON.chat))
   db_send_playerlist  : -> @NETWORK.rc.hset("room:#{@SOCKET._.room}",'playerlist', JSON.stringify(@SOCKET._.JSON.playerlist))
   db_send_canvasline  : (line) -> @NETWORK.rc.lpush("room:#{@SOCKET._.room}:canvas", JSON.stringify(line))
+
+  db_choose_word : ->
+    category  = ['adj', 'noun', 'verb'][$.R(0,2)]
+    topicObj  = $.AR(@WORDS[category])
+    word      = $.AR(topicObj.list)
+    {
+      value     : word
+      category  : category
+      topic     : topicObj.topic
+    }
+  
+  db_send_room_drawwords : ->
+    # todo: find out if this is really necessary!
+    # Choose 10 words to give the drawer
+    args = (@db_choose_word() for i in [0...10])
+    # Call this with the right things
+    args.unshift("room:#{@SOCKET._.room}:drawwords")
+    @NETWORK.rc.sadd.apply(@, args)
+    
   
   db_create_room : ->
     j = @SOCKET._.JSON
     roomDict = {}
     roomDict[k] = JSON.stringify(v) for k,v of j
     @NETWORK.rc.hmset("room:#{@SOCKET._.room}", roomDict)
+  
+  db_send_decr_playercount : ->
+    @NETWORK.rc.decr("room:#{@SOCKET._.room}:playercount")
     
+  db_send_incr_playercount : ->
+    @NETWORK.rc.incr("room:#{@SOCKET._.room}:playercount")
+  
   # TR (Transmission Receive) Events
-    
-  receive_hello : -> @send_welcome()
+        
+  receive_hello : (data) ->
+    @SOCKET._ = data
+    @send_welcome()
     
   receive_chatmsg : (data) ->
     j = @SOCKET._.JSON
@@ -51,6 +82,9 @@ class Connection
     j.chat = j.chat[j.chat.length-20..] if j.chat.length > 20
     @db_send_chat()
     @NETWORK.io.emit('chatmsg', data)
+  
+  db_receive_playercount : (err, data) ->
+    @NETWORK.rc.get("room:#{@SOCKET._.room}:playercount", )
   
   db_receive_canvaslength : (err, data) ->
     @NETWORK.rc.lrange("room:#{@SOCKET._.room}:canvas", 0, data, (e,d) => @db_receive_canvas(e,d))
@@ -95,7 +129,7 @@ class Connection
     return
     
   receive_joinroom : (data) ->
-    @SOCKET._ = data
+    @SOCKET._ = $.extend(@SOCKET._, data)
     @NETWORK.rc.hgetall("room:#{data.room}",      (e,d) => @db_receive_room(e,d))
     @NETWORK.rc.llen("room:#{data.room}:canvas",  (e,d) => @db_receive_canvaslength(e,d))
     return
@@ -104,6 +138,7 @@ class Connection
     j = @SOCKET._.JSON
     j.playerlist = j.playerlist.splice(j.playerlist.indexOf(@SOCKET._.name), 1)
     @db_send_playerlist()
+    @db_send_decr_playercount()
     return
     
   receive_canvasline : (data) ->

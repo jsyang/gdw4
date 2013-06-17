@@ -34,7 +34,7 @@ define [ 'core/word' ], (Word) ->
       @resize()
     
     add : (words) ->
-      @words = ( new Word({ value }) for value in words[0...10])
+      @words = ( new Word(wordParams) for wordParams in words[0...10])
       @arrangeWords()
       @draw()
     

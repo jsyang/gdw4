@@ -52,16 +52,14 @@ define(['core/word'], function(Word) {
     }
 
     PredrawingArea.prototype.add = function(words) {
-      var value;
+      var wordParams;
       this.words = (function() {
         var _i, _len, _ref, _results;
         _ref = words.slice(0, 10);
         _results = [];
         for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          value = _ref[_i];
-          _results.push(new Word({
-            value: value
-          }));
+          wordParams = _ref[_i];
+          _results.push(new Word(wordParams));
         }
         return _results;
       })();

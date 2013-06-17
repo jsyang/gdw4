@@ -197,7 +197,8 @@ define [
         @drawingArea.draw()
         @chat.resize().draw()
         @timer.resize().draw()
-        return 
+        return
+        
       return
     
     registerInputs : ->

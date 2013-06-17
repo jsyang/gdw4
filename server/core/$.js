@@ -20,5 +20,36 @@ module.exports = {
       target[k] = v;
     }
     return target;
+  },
+  R: function(l, h) {
+    return Math.floor(l + (Math.random() * (h - l + 1)));
+  },
+  AR: function(a) {
+    return a[Math.floor(Math.random() * a.length)];
+  },
+  WR: function(o, sum) {
+    var intervalEnd, k, lastK, r, sum_, v;
+    if (sum == null) {
+      sum = 0;
+    }
+    for (k in o) {
+      v = o[k];
+      sum += v;
+    }
+    sum_ = 1 / sum;
+    r = Math.random();
+    for (k in o) {
+      v = o[k];
+      if (!(typeof intervalEnd !== "undefined" && intervalEnd !== null)) {
+        intervalEnd = v * sum_;
+      }
+      if (r < intervalEnd) {
+        return k;
+      } else {
+        intervalEnd += v * sum_;
+        lastK = k;
+      }
+    }
+    return k;
   }
 };
