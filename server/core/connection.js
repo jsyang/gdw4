@@ -78,7 +78,7 @@ Connection = (function() {
 
   Connection.prototype.db_choose_word = function() {
     var category, topicObj, word;
-    category = ['adj', 'noun', 'verb'][$.R(0, 2)];
+    category = $.AR(['adj', 'noun', 'verb']);
     topicObj = $.AR(this.WORDS[category]);
     word = $.AR(topicObj.list);
     return {

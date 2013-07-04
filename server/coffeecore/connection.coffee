@@ -19,7 +19,8 @@ class Connection
     @SOCKET.on('disconnect', => @db_send_leaveroom)
     return
   
-  # TX (Transmission Send) Events
+  # Outgoing events = send_...    / db_send_...
+  # Incoming events = receive_... / db_receive_...
   
   send_welcome : ->
     # todo : assign the player their role
@@ -40,7 +41,7 @@ class Connection
   db_send_canvasline  : (line) -> @NETWORK.rc.lpush("room:#{@SOCKET._.room}:canvas", JSON.stringify(line))
 
   db_choose_word : ->
-    category  = ['adj', 'noun', 'verb'][$.R(0,2)]
+    category  = $.AR(['adj', 'noun', 'verb'])
     topicObj  = $.AR(@WORDS[category])
     word      = $.AR(topicObj.list)
     {

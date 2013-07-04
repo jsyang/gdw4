@@ -1,7 +1,28 @@
 GDW4
 ====
 
-    Client <--> Server <--> Redis
+# Startup
+You'll need nodeJS and Redis installed to run everything locally.
+
+## Client
+
+    # Starts the client files server
+    cd client
+    http-server
+    
+## Server
+
+    # Starts the Node game server
+    cd server
+    node core/server.js
+    
+    # Starts the Redis server
+    cd REDIS_DIRECTORY
+    src/redis-server
+
+Go to http://localhost:8080 in your browser
+
+====
 
 Word lists : categorized by subject
 http://www.manythings.org/vocabulary/lists/c/
