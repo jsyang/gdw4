@@ -5,7 +5,7 @@ do ( ->
   socket_io = require('socket.io')
   cxn       = require('./connection.js')
   
-  # Update this when you add new word lists.
+  # Update this when you add new word lists. Should follow directory structure.
   WORDS =
     adj : [
       'humans'
@@ -44,32 +44,9 @@ do ( ->
   network =
     rc    : redis.createClient() # we can host the redis server elsewhere but for now, run it locally
     io    : socket_io.listen(HTTPhandler).set('log level', 1).sockets
-    # Fixme: Maybe not totally necessary yet...
-    #db_send_words_exist_check : ->
-    #  @rc.multi()
-    #    .exists("words:adj:#{WORDS.adj[0]}")
-    #    .exists("words:noun:#{WORDS.noun[0]}")
-    #    .exists("words:verb:#{WORDS.verb[0]}")
-    #    .exec((e, r) => @db_receive_words_exist_check(e,r))
-    #
-    #db_receive_words_exist_check : (err, replies) ->
-    #  wordSetsExist = true
-    #  wordSetsExist &= bool for bool in replies
-    #  @db_send_words() unless wordSetExist
-    #
-    #db_send_words : ->
-    #  multiCmd = @rc.multi()
-    #  (
-    #    args = []
-    #    multiCmd.sadd("words:#{k}")
-    #  ) for k,v in WORDS
-    #  fs.read
-    #  return
-  # Check to see if DB has the word list! If not, then load the list from disk and populate it!    
-  #network.db_send_words_exist_check()
   
   # Load all the words into the obj.
-  # todo: offload this to the DB
+  # todo: offload this to redis
   (
     j = 0
     (
