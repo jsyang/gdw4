@@ -35,8 +35,12 @@ define ->
     # TX (Transmission Send) Events # # # # # # # #
     
     send_hello : ->
+      #@name = prompt('Your name', "guest#{$$.R(1000,9999)}")
+      @socket.emit('hello')
+    
+    send_name : ->
       @name = prompt('Your name', "guest#{$$.R(1000,9999)}")
-      @socket.emit('hello', { name : @name })
+      @socket.emit('name', @name)
     
     send_joinroom : ->
       # Keep room and name if resuming a session

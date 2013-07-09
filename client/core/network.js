@@ -71,10 +71,12 @@ define(function() {
     };
 
     Network.prototype.send_hello = function() {
+      return this.socket.emit('hello');
+    };
+
+    Network.prototype.send_name = function() {
       this.name = prompt('Your name', "guest" + ($$.R(1000, 9999)));
-      return this.socket.emit('hello', {
-        name: this.name
-      });
+      return this.socket.emit('name', this.name);
     };
 
     Network.prototype.send_joinroom = function() {
