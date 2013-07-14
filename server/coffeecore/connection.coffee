@@ -8,9 +8,9 @@ class Connection
   constructor : (params) ->
     @[k] = v for k,v of params 
     @registerServerEvents()
-    # Init data.
     @DATA = {}
-    
+  
+  # todo: a network diagram for this stuff
   registerServerEvents : ->
     @SOCKET.on('hello',       (d) => @receive_hello(d))
     @SOCKET.on('joinroom',    (d) => @receive_joinroom(d))
@@ -68,13 +68,13 @@ class Connection
     if data?
       if @DATA.players.indexOf(data) is -1
         @db_send_add_player(data)
+        @DATA.name = data
         @NETWORK.rc.hgetall("room:#{@DATA.room}:round", (e,d) => @db_receive_roundstate(e,d))
       else
         @SOCKET.emit('error:joinroom',"Sorry, '#{data}' is already taken!")
     return
   
   db_send_add_player : (name) ->
-    @DATA.name = name
     @NETWORK.rc.lpush("room:#{@DATA.room}:players", name)
   
   db_receive_roundstate : (err, data) ->

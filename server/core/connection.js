@@ -108,6 +108,7 @@ Connection = (function() {
     if (data != null) {
       if (this.DATA.players.indexOf(data) === -1) {
         this.db_send_add_player(data);
+        this.DATA.name = data;
         this.NETWORK.rc.hgetall("room:" + this.DATA.room + ":round", function(e, d) {
           return _this.db_receive_roundstate(e, d);
         });
@@ -118,7 +119,6 @@ Connection = (function() {
   };
 
   Connection.prototype.db_send_add_player = function(name) {
-    this.DATA.name = name;
     return this.NETWORK.rc.lpush("room:" + this.DATA.room + ":players", name);
   };
 
